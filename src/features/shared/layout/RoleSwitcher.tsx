@@ -47,7 +47,7 @@ export function RoleSwitcher() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeRole =
-    ROLES.find((r) => currentPath.startsWith(r.route)) || ROLES[0];
+    ROLES.find((r) => currentPath.startsWith(r.route)) ?? ROLES[0]!;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

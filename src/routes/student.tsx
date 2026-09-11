@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { StudentDashboardView } from "../features/student";
 
 export const Route = createFileRoute("/student")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string | undefined; quizId?: string | undefined } => {
+    const result: { tab?: string | undefined; quizId?: string | undefined } = {};
+    if (search["tab"]) result.tab = String(search["tab"]);
+    if (search["quizId"]) result.quizId = String(search["quizId"]);
+    return result;
+  },
   head: () => ({
     meta: [
       {
@@ -10,7 +16,7 @@ export const Route = createFileRoute("/student")({
       {
         name: "description",
         content:
-          "Simulated student screening results, recommended exercises, and support pathways.",
+          "Interactive student screening results, online cognitive quizzes, recommended study tools, and support pathways.",
       },
       {
         property: "og:title",
@@ -19,7 +25,7 @@ export const Route = createFileRoute("/student")({
       {
         property: "og:description",
         content:
-          "Simulated student screening results, recommended exercises, and support pathways.",
+          "Interactive student screening results, online cognitive quizzes, recommended study tools, and support pathways.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

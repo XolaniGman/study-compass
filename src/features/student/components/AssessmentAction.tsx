@@ -1,26 +1,42 @@
-import { SimulatedButton } from "../../shared";
+import React from "react";
+import { ClipboardList, FileBarChart2, Users } from "lucide-react";
+import { useStudent } from "../context/StudentContext";
+import { Button } from "../../../components/ui/button";
 
 export function AssessmentAction() {
+  const { setIsAssessmentModalOpen, setActiveAssessmentModuleId, setIsReportModalOpen, setIsConsultationModalOpen } =
+    useStudent();
+
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <SimulatedButton
-        label="Start New Screening Assessment"
-        toastMessage="Simulated action: Starting adaptive screening module..."
-        variant="primary"
-        size="md"
-      />
-      <SimulatedButton
-        label="Download Indicator Summary"
-        toastMessage="Simulated action: Generating PDF summary..."
+    <div className="flex flex-wrap items-center gap-3">
+      <Button
+        onClick={() => {
+          setActiveAssessmentModuleId("all-comprehensive");
+          setIsAssessmentModalOpen(true);
+        }}
+        className="bg-primary text-primary-foreground text-xs gap-2 rounded-xl"
+      >
+        <ClipboardList className="h-4 w-4" />
+        <span>Start New Screening Assessment</span>
+      </Button>
+
+      <Button
+        onClick={() => setIsReportModalOpen(true)}
         variant="outline"
-        size="md"
-      />
-      <SimulatedButton
-        label="Request Disability Unit Consultation"
-        toastMessage="Simulated action: Opening appointment scheduler..."
+        className="text-xs gap-2 rounded-xl"
+      >
+        <FileBarChart2 className="h-4 w-4" />
+        <span>Download Indicator Summary</span>
+      </Button>
+
+      <Button
+        onClick={() => setIsConsultationModalOpen(true)}
         variant="outline"
-        size="md"
-      />
+        className="text-xs gap-2 rounded-xl"
+      >
+        <Users className="h-4 w-4" />
+        <span>Request Disability Unit Consultation</span>
+      </Button>
     </div>
   );
 }

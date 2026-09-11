@@ -6,6 +6,7 @@ export interface NavItem {
   id: string;
   label: string;
   to: string;
+  search?: Record<string, string>;
   icon: ReactNode;
   badge?: string | number;
   badgeVariant?: "primary" | "secondary" | "accent";

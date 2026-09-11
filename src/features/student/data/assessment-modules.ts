@@ -1,0 +1,203 @@
+import type { AssessmentModule } from "../types";
+
+export const ASSESSMENT_MODULES: AssessmentModule[] = [
+  {
+    id: "mod-reading",
+    domain: "reading",
+    title: "Reading & Lexical Processing Screener",
+    shortName: "Reading & Dyslexia",
+    focusArea: "Phonological awareness, decoding speed, line tracking & text comprehension",
+    description:
+      "Assesses visual-lexical processing, word decoding efficiency, line tracking stability, and reading fatigue during academic study.",
+    estimatedMinutes: 6,
+    badgeColor: "bg-chart-2/15 text-chart-2 border-chart-2/30",
+    questions: [
+      {
+        id: "read-q1",
+        domain: "reading",
+        prompt: "When reading academic textbooks or lecture slides, do letters or words appear to blur, shift, or require re-reading multiple times?",
+        context: "Visual tracking and orthographic stability",
+        type: "frequency-scale",
+      },
+      {
+        id: "read-q2",
+        domain: "reading",
+        prompt: "How often do you lose your place on the page or accidentally skip lines when reading dense academic material?",
+        context: "Saccadic tracking and line navigation",
+        type: "frequency-scale",
+      },
+      {
+        id: "read-q3",
+        domain: "reading",
+        prompt: "Do you experience noticeable physical fatigue, headaches, or eye strain within 15-20 minutes of continuous reading?",
+        context: "Visual-cognitive endurance",
+        type: "frequency-scale",
+      },
+      {
+        id: "read-q4",
+        domain: "reading",
+        prompt: "How difficult is it for you to pronounce unfamiliar technical terminology or scientific jargon upon first sight?",
+        context: "Phonological decoding and rapid naming",
+        type: "impact-scale",
+      },
+      {
+        id: "read-q5",
+        domain: "reading",
+        prompt: "During timed tests, do you frequently run out of time primarily because reading and processing the exam questions takes longer than expected?",
+        context: "Timed reading speed and processing latency",
+        type: "impact-scale",
+      },
+    ],
+  },
+  {
+    id: "mod-math",
+    domain: "math",
+    title: "Mathematics & Quantitative Reasoning Screener",
+    shortName: "Mathematics & Dyscalculia",
+    focusArea: "Number sense, spatial-numerical operations, graph interpretation & symbolic retrieval",
+    description:
+      "Evaluates core numerical fluency, arithmetic automaticity, spatial graph comprehension, and formula execution.",
+    estimatedMinutes: 6,
+    badgeColor: "bg-chart-5/15 text-chart-5 border-chart-5/30",
+    questions: [
+      {
+        id: "math-q1",
+        domain: "math",
+        prompt: "How frequently do you reverse or mix up numbers (e.g., reading 64 as 46, or transposing digits in student IDs or calculations)?",
+        context: "Numerical spatial sequencing",
+        type: "frequency-scale",
+      },
+      {
+        id: "math-q2",
+        domain: "math",
+        prompt: "Do you struggle to perform basic mental arithmetic (addition, subtraction, multiplication tables) without relying on finger counting or a calculator?",
+        context: "Arithmetic automaticity and memory retrieval",
+        type: "frequency-scale",
+      },
+      {
+        id: "math-q3",
+        domain: "math",
+        prompt: "How difficult is it for you to quickly interpret visual graphs, coordinate axes, scatter plots, or multi-column data tables?",
+        context: "Spatial-quantitative interpretation",
+        type: "impact-scale",
+      },
+      {
+        id: "math-q4",
+        domain: "math",
+        prompt: "When solving multi-step mathematical formulas or code algorithms, do you easily lose track of intermediate steps or carrying numbers?",
+        context: "Working memory in quantitative operations",
+        type: "impact-scale",
+      },
+      {
+        id: "math-q5",
+        domain: "math",
+        prompt: "How often do you experience confusion estimating time durations, budget totals, or measuring scales in practical laboratory settings?",
+        context: "Magnitude estimation and spatial numerical scale",
+        type: "frequency-scale",
+      },
+    ],
+  },
+  {
+    id: "mod-writing",
+    domain: "writing",
+    title: "Written Expression & Motor Coordination Screener",
+    shortName: "Writing & Dysgraphia",
+    focusArea: "Fine motor stamina, idea synthesis, structural organization & spelling consistency",
+    description:
+      "Examines motor writing speed, essay structuring, idea-to-text translation, and transcription automaticity.",
+    estimatedMinutes: 5,
+    badgeColor: "bg-chart-1/15 text-chart-1 border-chart-1/30",
+    questions: [
+      {
+        id: "write-q1",
+        domain: "writing",
+        prompt: "When typing or handwriting essays, is there a significant gap between the depth of thoughts in your mind and what actually gets onto the page?",
+        context: "Idea-to-text translation and cognitive load",
+        type: "impact-scale",
+      },
+      {
+        id: "write-q2",
+        domain: "writing",
+        prompt: "Do you experience severe hand cramping, unusual wrist fatigue, or awkward grip discomfort during written tests?",
+        context: "Fine motor endurance and mechanical fatigue",
+        type: "frequency-scale",
+      },
+      {
+        id: "write-q3",
+        domain: "writing",
+        prompt: "How often do you spell the same common or technical word multiple different ways within the same document or assignment?",
+        context: "Orthographic consistency and retrieval stability",
+        type: "frequency-scale",
+      },
+      {
+        id: "write-q4",
+        domain: "writing",
+        prompt: "How difficult is it for you to structure essays into clear, logical paragraphs (Introduction, PEEL arguments, Conclusion) without feeling overwhelmed?",
+        context: "Macro-level structural organization",
+        type: "impact-scale",
+      },
+      {
+        id: "write-q5",
+        domain: "writing",
+        prompt: "During live lectures, do you struggle to listen to the lecturer and take legible notes simultaneously?",
+        context: "Dual-task processing and auditory-motor note-taking",
+        type: "impact-scale",
+      },
+    ],
+  },
+  {
+    id: "mod-attention",
+    domain: "attention",
+    title: "Attention, Working Memory & Executive Function Screener",
+    shortName: "Attention & ADHD",
+    focusArea: "Sustained focus, task initiation, time management & working memory load",
+    description:
+      "Screens executive functioning, cognitive stamina during long lectures, deadline organization, and distraction resilience.",
+    estimatedMinutes: 6,
+    badgeColor: "bg-chart-3/15 text-chart-3 border-chart-3/30",
+    questions: [
+      {
+        id: "att-q1",
+        domain: "attention",
+        prompt: "How often does your mind wander off during continuous 45-to-90-minute lectures, even when the subject matter is interesting to you?",
+        context: "Sustained auditory and visual vigilance",
+        type: "frequency-scale",
+      },
+      {
+        id: "att-q2",
+        domain: "attention",
+        prompt: "Do you experience 'task paralysis' or extreme difficulty starting assignments until the absolute final hours before the submission deadline?",
+        context: "Executive task initiation and dopamine regulation",
+        type: "frequency-scale",
+      },
+      {
+        id: "att-q3",
+        domain: "attention",
+        prompt: "When given multi-part verbal instructions (e.g., in a lab or classroom), do you easily forget the 2nd or 3rd step while executing the 1st?",
+        context: "Working memory buffer capacity",
+        type: "impact-scale",
+      },
+      {
+        id: "att-q4",
+        domain: "attention",
+        prompt: "How easily do minor environmental sounds (whispers, keyboard tapping, air conditioning) completely derail your study train of thought?",
+        context: "Selective sensory gating and distractibility",
+        type: "impact-scale",
+      },
+      {
+        id: "att-q5",
+        domain: "attention",
+        prompt: "Do you struggle with 'time blindness'—consistently underestimating how many hours an assignment will take to complete?",
+        context: "Temporal awareness and executive pacing",
+        type: "frequency-scale",
+      },
+    ],
+  },
+];
+
+export const LIKERT_OPTIONS = [
+  { value: 0, label: "Never / Very Rare", description: "Not a challenge in my daily studies" },
+  { value: 1, label: "Occasionally", description: "Occurs under heavy study load" },
+  { value: 2, label: "Frequently", description: "Regularly slows down my coursework" },
+  { value: 3, label: "Constantly / Severe", description: "Major academic obstacle" },
+];
