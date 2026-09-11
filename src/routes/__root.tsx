@@ -8,9 +8,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { GraduationCap } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +79,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Learning Disability Detector and Classifier System" },
+      {
+        name: "description",
+        content:
+          "A screening and support tool that helps university students identify possible learning difficulties early and connects them to appropriate support.",
+      },
+      { name: "author", content: "DUT" },
+      {
+        property: "og:title",
+        content: "Learning Disability Detector and Classifier System",
+      },
+      {
+        property: "og:description",
+        content:
+          "A screening and support tool that helps university students identify possible learning difficulties early and connects them to appropriate support.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -114,13 +126,65 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function Header() {
+  return (
+    <header className="border-b border-border bg-card/50 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-2 text-foreground">
+          <GraduationCap className="h-7 w-7 text-primary" aria-hidden="true" />
+          <span className="text-lg font-semibold tracking-tight">LD Detector</span>
+        </Link>
+        <nav className="flex flex-wrap items-center gap-1 text-sm font-medium">
+          <NavLink to="/student">Student</NavLink>
+          <NavLink to="/support">Support Staff</NavLink>
+          <NavLink to="/admin">Administrator</NavLink>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      activeProps={{ className: "bg-primary text-primary-foreground hover:bg-primary/90" }}
+      className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-border bg-card py-6">
+      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          This system provides screening indicators only and does not replace professional
+          assessment.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Learning Disability Detector and Classifier System
+        </p>
+      </div>
+    </footer>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header />
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
+      <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
   );
 }
