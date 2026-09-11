@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,6 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GraduationCap } from "lucide-react";
+import { DashboardLayout } from "../features/shared";
 
 function NotFoundComponent() {
   return (
@@ -26,7 +28,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Go home
           </Link>
@@ -58,13 +60,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
           </a>
@@ -79,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Learning Disability Detector and Classifier System" },
+      { title: "Learning Disability Detector and Classifier System | Study Compass" },
       {
         name: "description",
         content:
@@ -132,7 +134,7 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function Header() {
+function LandingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md transition-colors">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-8 lg:px-12">
@@ -164,7 +166,7 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   );
 }
 
-function Footer() {
+function LandingFooter() {
   return (
     <footer className="border-t border-border/60 bg-card py-10">
       <div className="mx-auto max-w-7xl px-6 text-center sm:px-8 lg:px-12">
@@ -182,16 +184,24 @@ function Footer() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const routerState = useRouterState();
+  const isLanding = routerState.location.pathname === "/";
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col bg-background">
-        <Header />
-        <main className="flex-1">
+      {isLanding ? (
+        <div className="flex min-h-screen flex-col bg-background">
+          <LandingHeader />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <LandingFooter />
+        </div>
+      ) : (
+        <DashboardLayout>
           <Outlet />
-        </main>
-        <Footer />
-      </div>
+        </DashboardLayout>
+      )}
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
   );
