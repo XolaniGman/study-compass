@@ -99,6 +99,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -128,13 +134,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function Header() {
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2 text-foreground">
-          <GraduationCap className="h-7 w-7 text-primary" aria-hidden="true" />
-          <span className="text-lg font-semibold tracking-tight">LD Detector</span>
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md transition-colors">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-8 lg:px-12">
+        <Link to="/" className="flex items-center gap-2.5 text-foreground group">
+          <GraduationCap className="h-6 w-6 text-primary transition-transform group-hover:scale-105" aria-hidden="true" />
+          <span className="font-serif text-xl font-light tracking-wide text-foreground">
+            Study Compass
+          </span>
         </Link>
-        <nav className="flex flex-wrap items-center gap-1 text-sm font-medium">
+        <nav className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium uppercase tracking-wider">
           <NavLink to="/student">Student</NavLink>
           <NavLink to="/support">Support Staff</NavLink>
           <NavLink to="/admin">Administrator</NavLink>
@@ -148,8 +156,8 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link
       to={to}
-      activeProps={{ className: "bg-primary text-primary-foreground hover:bg-primary/90" }}
-      className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+      activeProps={{ className: "bg-primary text-primary-foreground font-semibold" }}
+      className="rounded-lg px-3.5 py-1.5 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
     >
       {children}
     </Link>
@@ -158,14 +166,14 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-border bg-card py-6">
-      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          This system provides screening indicators only and does not replace professional
-          assessment.
+    <footer className="border-t border-border/60 bg-card py-10">
+      <div className="mx-auto max-w-7xl px-6 text-center sm:px-8 lg:px-12">
+        <p className="font-serif text-base text-foreground font-light">
+          Learning Disability Detector &amp; Classifier System
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Learning Disability Detector and Classifier System
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-w-xl mx-auto font-light">
+          This system provides screening indicators only and does not replace professional
+          assessment. Built in collaboration with the Durban University of Technology Disability Unit.
         </p>
       </div>
     </footer>
