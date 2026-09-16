@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SupportDashboardView } from "../features/support";
 
 export const Route = createFileRoute("/support")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string | undefined; studentId?: string | undefined } => {
+    const result: { tab?: string | undefined; studentId?: string | undefined } = {};
+    if (search["tab"]) result.tab = String(search["tab"]);
+    if (search["studentId"]) result.studentId = String(search["studentId"]);
+    return result;
+  },
   head: () => ({
     meta: [
       {
@@ -10,7 +16,7 @@ export const Route = createFileRoute("/support")({
       {
         name: "description",
         content:
-          "Simulated disability unit staff dashboard for screening queues, priority cases, and student referrals.",
+          "DUT Disability Unit Triage System: Student screening queue, flagged priority support, and clinical referral intake pipeline.",
       },
       {
         property: "og:title",
@@ -19,7 +25,7 @@ export const Route = createFileRoute("/support")({
       {
         property: "og:description",
         content:
-          "Simulated disability unit staff dashboard for screening queues, priority cases, and student referrals.",
+          "DUT Disability Unit Triage System: Student screening queue, flagged priority support, and clinical referral intake pipeline.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

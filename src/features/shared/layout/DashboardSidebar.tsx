@@ -21,6 +21,7 @@ import {
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AiAssistantModal } from "../components/AiAssistantModal";
 import type { NavGroup, RoleType } from "./types";
+import { useSupport } from "../../support";
 
 interface DashboardSidebarProps {
   onCloseMobile?: () => void;
@@ -33,6 +34,7 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const activeTab = currentSearch["tab"] || "overview";
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const { students, flaggedStudents, pendingReferrals } = useSupport();
 
   const currentRole: RoleType = currentPath.startsWith("/support")
     ? "support"
@@ -128,30 +130,34 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
           id: "support-overview",
           label: "Staff Dashboard",
           to: "/support",
+          search: { tab: "dashboard" },
           icon: <LayoutDashboard className="h-4 w-4" />,
         },
         {
           id: "student-queue",
           label: "Student Screening Queue",
           to: "/support",
+          search: { tab: "screening" },
           icon: <Users className="h-4 w-4" />,
-          badge: "128 Screened",
+          badge: `${students.length} Screened`,
           badgeVariant: "secondary",
         },
         {
           id: "flagged-cases",
           label: "Flagged Support Cases",
           to: "/support",
+          search: { tab: "flagged" },
           icon: <Flag className="h-4 w-4" />,
-          badge: "34 High Priority",
+          badge: `${flaggedStudents.length} High Priority`,
           badgeVariant: "accent",
         },
         {
           id: "intake-referrals",
           label: "Intake & Referrals",
           to: "/support",
+          search: { tab: "intake" },
           icon: <CalendarCheck className="h-4 w-4" />,
-          badge: "12 Pending",
+          badge: `${pendingReferrals.length} Pending`,
         },
       ],
     },
@@ -303,6 +309,14 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
                       const targetTab = item.search?.["tab"];
                       if (targetTab) {
                         isActive = activeTab === targetTab;
+                      } else {
+                        isActive = item.to === currentPath && !currentSearch["tab"];
+                      }
+                    } else if (currentRole === "support" && currentPath.startsWith("/support")) {
+                      const targetTab = item.search?.["tab"];
+                      const currentSupportTab = currentSearch["tab"] || "dashboard";
+                      if (targetTab) {
+                        isActive = currentSupportTab === targetTab;
                       } else {
                         isActive = item.to === currentPath && !currentSearch["tab"];
                       }
