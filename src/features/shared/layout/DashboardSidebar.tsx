@@ -232,6 +232,56 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
       ? adminNavGroups
       : studentNavGroups;
 
+  const [studentProfile, setStudentProfile] = useState(() => {
+    if (typeof window === "undefined") return { name: "Alex Ndlovu", role: "Student (2nd Year)", initials: "AN" };
+    try {
+      const saved = localStorage.getItem("study_compass_student_state_v3_profile");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const name = parsed.name || "Alex Ndlovu";
+        const parts = name.trim().split(" ");
+        const initials =
+          parts.length > 1
+            ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+            : name.slice(0, 2).toUpperCase();
+        return {
+          name,
+          role: `Student (${parsed.year || "2nd Year"})`,
+          initials,
+        };
+      }
+    } catch {}
+    return { name: "Alex Ndlovu", role: "Student (2nd Year)", initials: "AN" };
+  });
+
+  React.useEffect(() => {
+    const update = () => {
+      try {
+        const saved = localStorage.getItem("study_compass_student_state_v3_profile");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const name = parsed.name || "Alex Ndlovu";
+          const parts = name.trim().split(" ");
+          const initials =
+            parts.length > 1
+              ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+              : name.slice(0, 2).toUpperCase();
+          setStudentProfile({
+            name,
+            role: `Student (${parsed.year || "2nd Year"})`,
+            initials,
+          });
+        }
+      } catch {}
+    };
+    window.addEventListener("student-profile-updated", update);
+    window.addEventListener("storage", update);
+    return () => {
+      window.removeEventListener("student-profile-updated", update);
+      window.removeEventListener("storage", update);
+    };
+  }, []);
+
   const userProfile =
     currentRole === "support"
       ? {
@@ -245,11 +295,7 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
           role: "System Administrator",
           initials: "AO",
         }
-      : {
-          name: "Alex Ndlovu",
-          role: "Student (2nd Year)",
-          initials: "AN",
-        };
+      : studentProfile;
 
   return (
     <>
@@ -357,9 +403,12 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
         {/* Sidebar Footer: AI Assistant Widget & User Profile */}
         <div className="mt-8 space-y-4 px-1">
           {/* AI Assistant Card with interactive modal launch */}
-          <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card/50 to-primary/5 p-3.5 shadow-sm">
+          <div
+            onClick={() => setIsAiModalOpen(true)}
+            className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card/50 to-primary/5 p-3.5 shadow-sm cursor-pointer hover:border-primary/40 hover:shadow-md transition-all group"
+          >
             <div className="flex items-center gap-2 text-primary font-medium text-xs">
-              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              <Sparkles className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
               <span>AI Screening Assistant</span>
             </div>
             <p className="mt-1.5 text-[11px] text-muted-foreground font-light leading-relaxed">
@@ -367,8 +416,11 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
             </p>
             <button
               type="button"
-              onClick={() => setIsAiModalOpen(true)}
-              className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium py-2 px-2.5 transition-all shadow-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAiModalOpen(true);
+              }}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium py-2 px-2.5 transition-all shadow-sm cursor-pointer"
             >
               <Bot className="h-3.5 w-3.5" />
               <span>Consult AI Advisor</span>
@@ -380,7 +432,11 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
             to="/student"
             search={{ tab: "settings" } as any}
             onClick={onCloseMobile}
-            className="flex items-center justify-between pt-3 border-t border-border/60 hover:bg-muted/40 p-1.5 rounded-xl transition-colors group cursor-pointer"
+            className={`flex items-center justify-between pt-3 border-t border-border/60 p-1.5 rounded-xl transition-colors group cursor-pointer ${
+              activeTab === "settings" && currentRole === "student"
+                ? "bg-primary/15 border-primary/40"
+                : "hover:bg-muted/40"
+            }`}
             title="View Student Profile & Settings"
           >
             <div className="flex items-center gap-2.5 min-w-0">
