@@ -11,6 +11,7 @@ import {
   generateMockStudents,
   mockSupportStaffProfile,
 } from "../data/mock-support-data";
+import { useInstitutional } from "../../shared";
 
 interface SupportContextType {
   activeTab: string;
@@ -172,16 +173,62 @@ export function SupportProvider({ children }: { children: React.ReactNode }) {
     }
   }, [recentActivity]);
 
-  // Derived filtered views — strictly computed from students live array
-  const flaggedStudents = students.filter(
+  const { scoringConfig } = useInstitutional();
+
+  // Dynamic student triage evaluation driven by shared scoringConfig (Admin writes, Staff reads)
+  const evaluatedStudents = React.useMemo(() => {
+    if (!scoringConfig) return students;
+    const { high, moderate } = scoringConfig.thresholds;
+    const { reading: wR, mathematics: wM, grammar: wW, memory: wA } = scoringConfig.weightings;
+    const totalWeight = (wR || 1) + (wM || 1) + (wW || 1) + (wA || 1);
+
+    return students.map((s) => {
+      const scores = s.domainScores;
+      // Count domains with score <= high threshold
+      let flaggedCount = 0;
+      if (scores.reading <= high) flaggedCount++;
+      if (scores.math <= high) flaggedCount++;
+      if (scores.writing <= high) flaggedCount++;
+      if (scores.attention <= high) flaggedCount++;
+
+      const weightedComposite = Math.round(
+        (scores.reading * (wR || 1) +
+          scores.math * (wM || 1) +
+          scores.writing * (wW || 1) +
+          scores.attention * (wA || 1)) /
+          totalWeight
+      );
+
+      let risk: TriageStudentRecord["riskLevel"] = "Low";
+      if (flaggedCount >= 2 || weightedComposite <= high) {
+        risk = "High";
+      } else if (flaggedCount >= 1 || weightedComposite <= moderate) {
+        risk = "Moderate";
+      } else if (weightedComposite < 75) {
+        risk = "Mild";
+      } else {
+        risk = "Low";
+      }
+
+      return {
+        ...s,
+        flaggedDomainCount: flaggedCount,
+        riskLevel: risk,
+        compositeScore: weightedComposite,
+      };
+    });
+  }, [students, scoringConfig]);
+
+  // Derived filtered views — strictly computed from evaluatedStudents live array
+  const flaggedStudents = evaluatedStudents.filter(
     (s) => (s.riskLevel === "High" || s.flaggedDomainCount >= 2) && !s.flagReviewed
   );
 
-  const pendingReferrals = students.filter(
+  const pendingReferrals = evaluatedStudents.filter(
     (s) => s.status === "Pending Specialist"
   );
 
-  const completedReferrals = students.filter(
+  const completedReferrals = evaluatedStudents.filter(
     (s) => s.status === "Referred to Accommodations" || s.status === "Supported"
   );
 
@@ -418,7 +465,7 @@ export function SupportProvider({ children }: { children: React.ReactNode }) {
         activeTab,
         setActiveTab,
         staffProfile: mockSupportStaffProfile,
-        students,
+        students: evaluatedStudents,
         flaggedStudents,
         pendingReferrals,
         completedReferrals,

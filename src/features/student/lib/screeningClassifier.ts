@@ -83,10 +83,26 @@ const DOMAIN_METADATA: Record<
   },
 };
 
-export function classifyScore(score: number): {
+export function classifyScore(
+  score: number,
+  thresholds?: { high: number; moderate: number }
+): {
   level: ScreeningLevel;
   levelLabel: string;
 } {
+  if (thresholds) {
+    if (score <= thresholds.high) {
+      return { level: "needs-attention", levelLabel: "Needs Attention (High Priority)" };
+    }
+    if (score <= thresholds.moderate) {
+      return { level: "moderate", levelLabel: "Moderate Indicator" };
+    }
+    if (score < 75) {
+      return { level: "mild", levelLabel: "Mild Difficulty Indicator" };
+    }
+    return { level: "typical", levelLabel: "Typical Range (Low Risk)" };
+  }
+
   if (score < 25) {
     return { level: "typical", levelLabel: "Typical Range (Low Risk)" };
   }
@@ -101,7 +117,8 @@ export function classifyScore(score: number): {
 
 export function evaluateDomainAnswers(
   domain: DomainId,
-  answers: Record<string, number>
+  answers: Record<string, number>,
+  thresholds?: { high: number; moderate: number }
 ): DomainResult {
   const meta = DOMAIN_METADATA[domain];
   const mod = ASSESSMENT_MODULES.find((m) => m.domain === domain);
@@ -118,7 +135,7 @@ export function evaluateDomainAnswers(
   });
 
   const percentage = max > 0 ? Math.round((raw / max) * 100) : 0;
-  const { level, levelLabel } = classifyScore(percentage);
+  const { level, levelLabel } = classifyScore(percentage, thresholds);
 
   let summary = "";
   if (level === "typical") {
@@ -155,26 +172,42 @@ export function evaluateDomainAnswers(
 
 export function compileScreeningSession(
   answers: Record<string, number>,
-  moduleId: string | "all-comprehensive"
+  moduleId: string | "all-comprehensive",
+  scoringConfig?: {
+    thresholds?: { high: number; moderate: number };
+    weightings?: Record<string, number>;
+  }
 ): ScreeningSessionRecord {
   const domains: DomainId[] = ["reading", "math", "writing", "attention"];
   const domainResults: Record<DomainId, DomainResult> = {} as any;
 
-  let totalScore = 0;
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
   let highestScore = -1;
   let highestDomain: DomainId = "reading";
 
   domains.forEach((d) => {
-    const res = evaluateDomainAnswers(d, answers);
+    const res = evaluateDomainAnswers(d, answers, scoringConfig?.thresholds);
     domainResults[d] = res;
-    totalScore += res.score;
+    const domainWeightKey =
+      d === "math"
+        ? "mathematics"
+        : d === "writing"
+        ? "grammar"
+        : d === "attention"
+        ? "memory"
+        : "reading";
+    const weight = scoringConfig?.weightings?.[domainWeightKey] || 1;
+    totalWeightedScore += res.score * weight;
+    totalWeight += weight;
+
     if (res.score > highestScore) {
       highestScore = res.score;
       highestDomain = d;
     }
   });
 
-  const overallIndex = Math.round(totalScore / domains.length);
+  const overallIndex = totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
   const moduleInfo =
     moduleId === "all-comprehensive"
       ? "Comprehensive 4-Domain Screening Battery"

@@ -13,11 +13,14 @@ import {
   FileCheck,
 } from "lucide-react";
 import { useStudent } from "../../context/StudentContext";
+import { useInstitutional } from "../../../shared";
 import { Button } from "../../../../components/ui/button";
 import { Badge } from "../../../../components/ui/badge";
 
 export function StudentSupportTab() {
   const { consultations, setIsConsultationModalOpen, cancelConsultation, profile } = useStudent();
+  const { contacts } = useInstitutional();
+  const activeContacts = contacts.filter((c) => !c.archived);
 
   return (
     <div className="space-y-8">
@@ -175,38 +178,9 @@ export function StudentSupportTab() {
         </h3>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            {
-              campus: "ML Sultan Campus (Durban)",
-              building: "Disability Care Centre, Room A1-14",
-              phone: "+27 (0)31 373 2489",
-              email: "disability.mlsultan@dut.ac.za",
-              hours: "Mon - Fri: 08:00 - 16:30",
-            },
-            {
-              campus: "Steve Biko Campus (Durban)",
-              building: "Library Student Services, 2nd Floor",
-              phone: "+27 (0)31 373 2038",
-              email: "disability.stevebiko@dut.ac.za",
-              hours: "Mon - Fri: 08:00 - 16:30",
-            },
-            {
-              campus: "Ritson Campus (Durban)",
-              building: "Academic Support Hub, Room R204",
-              phone: "+27 (0)31 373 5401",
-              email: "disability.ritson@dut.ac.za",
-              hours: "Mon - Fri: 08:30 - 16:00",
-            },
-            {
-              campus: "Indumiso Campus (Pietermaritzburg)",
-              building: "Midlands Student Wellness Building",
-              phone: "+27 (0)33 845 8820",
-              email: "disability.midlands@dut.ac.za",
-              hours: "Mon - Fri: 08:00 - 16:00",
-            },
-          ].map((loc, idx) => (
+          {activeContacts.map((loc) => (
             <div
-              key={idx}
+              key={loc.id}
               className="rounded-2xl border border-border/80 bg-background/50 p-5 space-y-3 hover:border-primary/40 transition-all"
             >
               <h4 className="font-semibold text-sm text-foreground">{loc.campus}</h4>
@@ -226,6 +200,11 @@ export function StudentSupportTab() {
                 <div className="text-[11px] text-muted-foreground font-mono mt-1">
                   {loc.hours}
                 </div>
+                {loc.specialistInCharge && (
+                  <div className="text-[11px] text-primary font-medium mt-0.5">
+                    Lead: {loc.specialistInCharge}
+                  </div>
+                )}
               </div>
             </div>
           ))}

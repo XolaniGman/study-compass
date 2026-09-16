@@ -6,3 +6,5 @@ export * from "./layout/DashboardSidebar";
 export * from "./layout/DashboardTopbar";
 export * from "./layout/RoleSwitcher";
 export * from "./layout/types";
+export * from "./context/InstitutionalContext";
+export * from "./data/initial-institutional-data";

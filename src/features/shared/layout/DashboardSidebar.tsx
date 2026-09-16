@@ -17,11 +17,13 @@ import {
   Bot,
   Trophy,
   Settings,
+  Database,
 } from "lucide-react";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AiAssistantModal } from "../components/AiAssistantModal";
 import type { NavGroup, RoleType } from "./types";
 import { useSupport } from "../../support";
+import { useInstitutional } from "../context/InstitutionalContext";
 
 interface DashboardSidebarProps {
   onCloseMobile?: () => void;
@@ -35,6 +37,7 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const { students, flaggedStudents, pendingReferrals } = useSupport();
+  const { totalUsers, activeModules, contentLibrary } = useInstitutional();
 
   const currentRole: RoleType = currentPath.startsWith("/support")
     ? "support"
@@ -182,33 +185,46 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
 
   const adminNavGroups: NavGroup[] = [
     {
-      groupTitle: "System Operations",
+      groupTitle: "Institutional Administration",
       items: [
         {
           id: "admin-overview",
-          label: "Administrator Dashboard",
+          label: "Dashboard Overview",
           to: "/admin",
+          search: { tab: "overview" },
           icon: <LayoutDashboard className="h-4 w-4" />,
         },
         {
           id: "admin-users",
-          label: "Manage Users & Access",
+          label: "Users & Permissions",
           to: "/admin",
+          search: { tab: "users" },
           icon: <Users className="h-4 w-4" />,
-          badge: "142 Active",
+          badge: `${totalUsers} Enrolled`,
         },
         {
           id: "admin-assessments",
           label: "Screening Modules",
           to: "/admin",
+          search: { tab: "assessments" },
           icon: <FolderKanban className="h-4 w-4" />,
-          badge: "8 Configured",
+          badge: `${activeModules} Active`,
+        },
+        {
+          id: "admin-content",
+          label: "Exercises & Support",
+          to: "/admin",
+          search: { tab: "content" },
+          icon: <Database className="h-4 w-4" />,
+          badge: `${contentLibrary} Items`,
         },
         {
           id: "admin-settings",
           label: "Operations & Backups",
           to: "/admin",
+          search: { tab: "maintenance" },
           icon: <Sliders className="h-4 w-4" />,
+          badge: "Healthy",
         },
       ],
     },
@@ -317,6 +333,14 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
                       const currentSupportTab = currentSearch["tab"] || "dashboard";
                       if (targetTab) {
                         isActive = currentSupportTab === targetTab;
+                      } else {
+                        isActive = item.to === currentPath && !currentSearch["tab"];
+                      }
+                    } else if (currentRole === "admin" && currentPath.startsWith("/admin")) {
+                      const targetTab = item.search?.["tab"];
+                      const currentAdminTab = currentSearch["tab"] || "overview";
+                      if (targetTab) {
+                        isActive = currentAdminTab === targetTab;
                       } else {
                         isActive = item.to === currentPath && !currentSearch["tab"];
                       }

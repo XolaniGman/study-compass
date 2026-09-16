@@ -22,8 +22,14 @@ interface StudentHeaderProps {
 }
 
 export function StudentHeader({ activeTab, onSelectTab }: StudentHeaderProps) {
-  const { profile, accessibility, updateAccessibility, setIsReportModalOpen, setIsConsultationModalOpen } =
-    useStudent();
+  const {
+    profile,
+    accessibility,
+    updateAccessibility,
+    setIsReportModalOpen,
+    setIsConsultationModalOpen,
+    exercises,
+  } = useStudent();
 
   const navTabs = [
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -49,6 +55,7 @@ export function StudentHeader({ activeTab, onSelectTab }: StudentHeaderProps) {
       id: "exercises",
       label: "Study Tools & Exercises",
       icon: <Dumbbell className="h-4 w-4" />,
+      badge: `${exercises.length} Tools`,
     },
     {
       id: "support",

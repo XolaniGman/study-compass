@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminDashboardView } from "../features/admin";
 
 export const Route = createFileRoute("/admin")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string; subtab?: string } => {
+    const result: { tab?: string; subtab?: string } = {};
+    if (search["tab"]) result.tab = String(search["tab"]);
+    if (search["subtab"]) result.subtab = String(search["subtab"]);
+    return result;
+  },
   head: () => ({
     meta: [
       {

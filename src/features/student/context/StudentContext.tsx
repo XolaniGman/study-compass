@@ -19,6 +19,7 @@ import {
 } from "../data/student-data";
 import { STUDENT_QUIZZES, DEFAULT_QUIZ_ATTEMPTS } from "../data/quiz-data";
 import { compileScreeningSession } from "../lib/screeningClassifier";
+import { useInstitutional } from "../../shared";
 
 interface StudentContextType {
   activeTab: string;
@@ -122,15 +123,29 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  const [exercises, setExercises] = useState<RecommendedExerciseItem[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_EXERCISES;
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_exercises`);
-      return saved ? JSON.parse(saved) : DEFAULT_EXERCISES;
-    } catch {
-      return DEFAULT_EXERCISES;
-    }
-  });
+  const institutional = useInstitutional();
+
+  // Shared active exercises filtered by !archived
+  const sharedActiveExercises: RecommendedExerciseItem[] = React.useMemo(() => {
+    if (!institutional?.exercises) return DEFAULT_EXERCISES;
+    return institutional.exercises
+      .filter((e) => !e.archived)
+      .map((e) => ({
+        id: e.id,
+        title: e.title,
+        domain: (e.domain as DomainId) || "reading",
+        category: e.category,
+        schedule: e.schedule || "Daily self-paced routine",
+        durationMinutes: e.durationMinutes,
+        difficulty: e.difficulty,
+        interactiveType: (e.interactiveType as any) || "tts-reader",
+        description: e.description,
+        objectives: e.objectives || [],
+        steps: e.steps || ["Review instructions", "Complete interactive drill"],
+        completedCount: e.completedCount || 0,
+        lastCompletedAt: e.lastCompletedAt,
+      }));
+  }, [institutional?.exercises]);
 
   const [consultations, setConsultations] = useState<ConsultationBooking[]>(() => {
     if (typeof window === "undefined") return DEFAULT_BOOKED_CONSULTATIONS;
@@ -199,14 +214,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(`${STORAGE_KEY}_exercises`, JSON.stringify(exercises));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [exercises]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem(`${STORAGE_KEY}_consultations`, JSON.stringify(consultations));
     } catch (e) {
       console.error(e);
@@ -242,7 +249,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       ...latestSession.answers,
       ...answers,
     };
-    const newSession = compileScreeningSession(mergedAnswers, moduleId);
+    const newSession = compileScreeningSession(mergedAnswers, moduleId, institutional?.scoringConfig);
     setLatestSession(newSession);
     setSessionsHistory((prev) => [newSession, ...prev]);
     toast.success("Screening assessment evaluated! New indicators generated.");
@@ -326,7 +333,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
         latestSession,
         sessionsHistory,
         submitAssessment,
-        exercises,
+        exercises: sharedActiveExercises,
         recordExerciseCompletion,
         consultations,
         bookConsultation,

@@ -14,7 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GraduationCap } from "lucide-react";
-import { DashboardLayout } from "../features/shared";
+import { DashboardLayout, InstitutionalProvider } from "../features/shared";
 import { SupportProvider } from "../features/support";
 
 function NotFoundComponent() {
@@ -199,11 +199,13 @@ function RootComponent() {
           <LandingFooter />
         </div>
       ) : (
-        <SupportProvider>
-          <DashboardLayout>
-            <Outlet />
-          </DashboardLayout>
-        </SupportProvider>
+        <InstitutionalProvider>
+          <SupportProvider>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </SupportProvider>
+        </InstitutionalProvider>
       )}
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
