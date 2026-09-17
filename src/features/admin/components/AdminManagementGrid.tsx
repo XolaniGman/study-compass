@@ -13,6 +13,7 @@ import {
   BookOpen,
   Archive,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 
@@ -22,6 +23,7 @@ interface AdminManagementGridProps {
   onDeactivateAccount: () => void;
   onExportDirectory: () => void;
   onCreateAssessment: () => void;
+  onCreateQuiz?: () => void;
   onEditIndicators: () => void;
   onPreviewFlow: () => void;
   onSetWeightings: () => void;
@@ -38,6 +40,7 @@ export function AdminManagementGrid({
   onDeactivateAccount,
   onExportDirectory,
   onCreateAssessment,
+  onCreateQuiz,
   onEditIndicators,
   onPreviewFlow,
   onSetWeightings,
@@ -147,12 +150,22 @@ export function AdminManagementGrid({
 
         <div className="pt-4 border-t border-border/60 grid grid-cols-2 gap-2.5">
           <Button
-            onClick={onCreateAssessment}
+            onClick={onCreateQuiz || onCreateAssessment}
             size="sm"
-            className="rounded-xl text-xs bg-primary text-primary-foreground h-9 gap-1.5 shadow-sm justify-start px-3"
+            className="rounded-xl text-xs bg-primary text-primary-foreground h-9 gap-1.5 shadow-sm justify-start px-3 font-medium"
           >
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span>Create Assessment</span>
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Create Quiz</span>
+          </Button>
+
+          <Button
+            onClick={onCreateAssessment}
+            variant="outline"
+            size="sm"
+            className="rounded-xl text-xs h-9 gap-1.5 justify-start px-3"
+          >
+            <PlusCircle className="h-3.5 w-3.5 text-primary" />
+            <span>Question Bank</span>
           </Button>
 
           <Button

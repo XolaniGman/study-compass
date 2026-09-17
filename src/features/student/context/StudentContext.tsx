@@ -19,6 +19,7 @@ import {
   DEFAULT_ACCESSIBILITY_SETTINGS,
 } from "../data/student-data";
 import { STUDENT_QUIZZES, DEFAULT_QUIZ_ATTEMPTS } from "../data/quiz-data";
+import { getAllQuizzes } from "../../admin/lib/quizStorage";
 import { compileScreeningSession } from "../lib/screeningClassifier";
 import { useInstitutional } from "../../shared";
 
@@ -173,7 +174,16 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  const [quizzes] = useState<Quiz[]>(STUDENT_QUIZZES);
+  const [quizzes, setQuizzes] = useState<Quiz[]>(() => getAllQuizzes());
+
+  useEffect(() => {
+    const handleQuizzesUpdated = () => {
+      setQuizzes(getAllQuizzes());
+    };
+    window.addEventListener("quizzes-updated", handleQuizzesUpdated);
+    return () => window.removeEventListener("quizzes-updated", handleQuizzesUpdated);
+  }, []);
+
   const [quizAttempts, setQuizAttempts] = useState<QuizAttemptRecord[]>(() => {
     if (typeof window === "undefined") return DEFAULT_QUIZ_ATTEMPTS;
     try {
@@ -190,12 +200,12 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const quizId = currentSearch?.["quizId"];
     if (quizId && !activeQuiz) {
-      const target = STUDENT_QUIZZES.find((q) => q.id === quizId);
+      const target = quizzes.find((q) => q.id === quizId);
       if (target) {
         setActiveQuizState(target);
       }
     }
-  }, [currentSearch?.["quizId"]]);
+  }, [currentSearch?.["quizId"], quizzes]);
 
   const setActiveQuiz = (quiz: Quiz | null) => {
     setActiveQuizState(quiz);

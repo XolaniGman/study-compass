@@ -160,13 +160,17 @@ export interface QuizQuestion {
 export interface Quiz {
   id: string;
   title: string;
-  domain: DomainId;
+  domain: DomainId | string;
   category: string;
   durationMinutes: number;
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   description: string;
   badgeColor: string;
   questions: QuizQuestion[];
+  passingScore?: number;
+  isCustom?: boolean;
+  createdAt?: string;
+  author?: string;
 }
 
 export interface QuizAttemptRecord {

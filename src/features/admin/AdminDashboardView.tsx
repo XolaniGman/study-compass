@@ -85,6 +85,7 @@ export function AdminDashboardView() {
             onDeactivateAccount={() => handleSelectTab("users", "deactivate-account")}
             onExportDirectory={() => handleSelectTab("users", "export-directory")}
             onCreateAssessment={() => handleSelectTab("assessments", "create-assessment")}
+            onCreateQuiz={() => handleSelectTab("assessments", "create-quiz")}
             onEditIndicators={() => handleSelectTab("assessments", "edit-indicators")}
             onPreviewFlow={() => handleSelectTab("assessments", "preview-flow")}
             onSetWeightings={() => handleSelectTab("assessments", "set-weightings")}

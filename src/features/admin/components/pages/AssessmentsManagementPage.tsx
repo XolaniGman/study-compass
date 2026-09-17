@@ -21,6 +21,7 @@ import { Label } from "../../../../components/ui/label";
 import { Badge } from "../../../../components/ui/badge";
 import { toast } from "sonner";
 import type { ScreeningDomainKey, AssessmentPoolItem } from "../../../shared/types";
+import { CreateQuizBuilder } from "./CreateQuizBuilder";
 
 interface AssessmentsManagementPageProps {
   initialSubtab?: string;
@@ -103,6 +104,12 @@ export function AssessmentsManagementPage({
       label: "Create Assessment",
       icon: <PlusCircle className="h-4 w-4" />,
       badge: "Question Bank",
+    },
+    {
+      id: "create-quiz",
+      label: "Create Quiz",
+      icon: <Sparkles className="h-4 w-4" />,
+      badge: "Quiz Builder",
     },
     {
       id: "edit-indicators",
@@ -456,6 +463,11 @@ export function AssessmentsManagementPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Sub-Tab: Create Quiz (Full Diagnostic Quiz Authoring Studio) */}
+      {activeSubtab === "create-quiz" && (
+        <CreateQuizBuilder assessmentPools={assessmentPools} />
       )}
 
       {/* Sub-Tab 2: Edit Indicators (Risk Thresholds Tuning) */}
