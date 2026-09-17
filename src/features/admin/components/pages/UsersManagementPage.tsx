@@ -157,48 +157,6 @@ export function UsersManagementPage({
 
   return (
     <div className="space-y-6">
-      {/* Top Breadcrumb & Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/70">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <button
-              onClick={onNavigateToOverview}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Overview</span>
-            </button>
-            <span className="text-muted-foreground/60 text-xs">&bull;</span>
-            <span className="text-[11px] font-mono uppercase tracking-wider text-primary font-semibold bg-primary/10 px-2.5 py-0.5 rounded-full">
-              FR01 &bull; FR03 Roles &bull; Module 1
-            </span>
-          </div>
-
-          <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-tight text-foreground">
-            Manage Users &amp; Permissions
-          </h1>
-
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-light max-w-2xl">
-            Manage student registrations, support specialist roles, and institutional access
-            permissions with strict POPIA compliance.
-          </p>
-        </div>
-
-        {/* Live Metrics Badges */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-mono font-medium">
-            Total Users: <strong>{totalUsers}</strong>
-          </div>
-          <div className="px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 text-xs font-mono font-medium">
-            +{usersAddedToday} today
-          </div>
-          <div className="px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 text-xs font-mono font-medium flex items-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            <span>POPIA S14</span>
-          </div>
-        </div>
-      </div>
-
       {/* Horizontal Sub-Tabs Bar — Exactly Matching Reference Screenshot */}
       <div className="flex overflow-x-auto no-scrollbar gap-1.5 pt-1 pb-2 border-b border-border/70">
         {subTabs.map((tab) => {

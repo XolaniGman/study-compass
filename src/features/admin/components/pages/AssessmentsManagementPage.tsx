@@ -209,45 +209,6 @@ export function AssessmentsManagementPage({
 
   return (
     <div className="space-y-6">
-      {/* Top Breadcrumb & Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/70">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <button
-              onClick={onNavigateToOverview}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Overview</span>
-            </button>
-            <span className="text-muted-foreground/60 text-xs">&bull;</span>
-            <span className="text-[11px] font-mono uppercase tracking-wider text-chart-2 font-semibold bg-chart-2/15 px-2.5 py-0.5 rounded-full">
-              FR20 &bull; Screening Engine &bull; Module 2
-            </span>
-          </div>
-
-          <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-tight text-foreground">
-            Manage Screening Modules
-          </h1>
-
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-light max-w-2xl">
-            Configure question banks, psychometric indicator thresholds, and weighting formulas
-            across the 5 screening domains.
-          </p>
-        </div>
-
-        {/* Live Badges */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl border border-chart-2/20 bg-chart-2/10 text-chart-2 text-xs font-mono font-medium">
-            Active Modules: <strong>{activeModules}</strong>
-          </div>
-          <div className="px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 text-xs font-mono font-medium flex items-center gap-1.5">
-            <Activity className="h-3.5 w-3.5 animate-pulse" />
-            <span>5 Domains Configured</span>
-          </div>
-        </div>
-      </div>
-
       {/* Horizontal Sub-Tabs Bar — Exactly Matching Reference Screenshot */}
       <div className="flex overflow-x-auto no-scrollbar gap-1.5 pt-1 pb-2 border-b border-border/70">
         {subTabs.map((tab) => {

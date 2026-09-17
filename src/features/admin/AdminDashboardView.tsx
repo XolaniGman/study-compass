@@ -70,16 +70,11 @@ export function AdminDashboardView() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-12 space-y-8">
-      {/* 1. Global Admin Portal Header with Active Tab Switcher */}
-      <AdminHeader
-        profile={mockAdminProfile}
-        activeTab={activeTab}
-        onSelectTab={(tab) => handleSelectTab(tab)}
-      />
-
-      {/* 2. Full Page View Rendering based on activeTab */}
+      {/* 1. Overview Tab: Displays portal header, metrics, and module cards */}
       {activeTab === "overview" && (
         <div className="space-y-8">
+          <AdminHeader profile={mockAdminProfile} />
+
           {/* Top Metric Cards (Computed Dynamically) */}
           <AdminMetrics />
 
@@ -110,6 +105,7 @@ export function AdminDashboardView() {
         </div>
       )}
 
+      {/* 2. Module 1 Full Page: Manage Users & Permissions */}
       {activeTab === "users" && (
         <UsersManagementPage
           initialSubtab={activeSubtab || "add-user"}
@@ -118,6 +114,7 @@ export function AdminDashboardView() {
         />
       )}
 
+      {/* 3. Module 2 Full Page: Manage Screening Modules */}
       {activeTab === "assessments" && (
         <AssessmentsManagementPage
           initialSubtab={activeSubtab || "create-assessment"}
@@ -126,6 +123,7 @@ export function AdminDashboardView() {
         />
       )}
 
+      {/* 4. Module 3 Full Page: Manage Exercises & Support */}
       {activeTab === "content" && (
         <ContentManagementPage
           initialSubtab={activeSubtab || "add-exercise"}
@@ -134,6 +132,7 @@ export function AdminDashboardView() {
         />
       )}
 
+      {/* 5. System Operations & Maintenance Full Page */}
       {activeTab === "maintenance" && (
         <OperationsMaintenancePage
           initialSubtab={activeSubtab || "system-health"}

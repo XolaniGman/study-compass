@@ -1,66 +1,18 @@
 import React from "react";
-import {
-  LayoutDashboard,
-  Users,
-  FolderKanban,
-  Database,
-  Sliders,
-  RotateCcw,
-  Activity,
-  ShieldCheck,
-} from "lucide-react";
+import { RotateCcw, Activity } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useInstitutional } from "../../shared";
 import type { AdminProfile } from "../types";
 
 interface AdminHeaderProps {
   profile: AdminProfile;
-  activeTab?: string;
-  onSelectTab?: (tab: string) => void;
 }
 
-export function AdminHeader({
-  profile,
-  activeTab = "overview",
-  onSelectTab,
-}: AdminHeaderProps) {
-  const { totalUsers, activeModules, contentLibrary, resetAllToBaseline } =
-    useInstitutional();
-
-  const navTabs = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: <LayoutDashboard className="h-4 w-4" />,
-    },
-    {
-      id: "users",
-      label: "Users & Permissions",
-      icon: <Users className="h-4 w-4" />,
-      badge: `${totalUsers} Enrolled`,
-    },
-    {
-      id: "assessments",
-      label: "Screening Modules",
-      icon: <FolderKanban className="h-4 w-4" />,
-      badge: `${activeModules} Active`,
-    },
-    {
-      id: "content",
-      label: "Exercises & Support",
-      icon: <Database className="h-4 w-4" />,
-      badge: `${contentLibrary} Items`,
-    },
-    {
-      id: "maintenance",
-      label: "Operations & Backups",
-      icon: <Sliders className="h-4 w-4" />,
-      badge: "Healthy",
-    },
-  ];
+export function AdminHeader({ profile }: AdminHeaderProps) {
+  const { resetAllToBaseline } = useInstitutional();
 
   return (
-    <div className="space-y-6 border-b border-border/70 pb-6">
+    <div className="space-y-4 border-b border-border/70 pb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -104,36 +56,6 @@ export function AdminHeader({
             <span>Reset Baseline</span>
           </Button>
         </div>
-      </div>
-
-      {/* Top Horizontal Navigation Sub-Tabs Bar — Matching Screenshot */}
-      <div className="flex overflow-x-auto no-scrollbar gap-1.5 pt-2">
-        {navTabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onSelectTab && onSelectTab(tab.id)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-all ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm font-semibold"
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {tab.badge && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                    isActive ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
     </div>
   );
