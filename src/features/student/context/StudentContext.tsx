@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import type {
   StudentProfile,
   ScreeningSessionRecord,
@@ -63,35 +64,22 @@ const STORAGE_KEY = "study_compass_student_state_v3";
 const StudentContext = createContext<StudentContextType | null>(null);
 
 export function StudentProvider({ children }: { children: React.ReactNode }) {
-  const [activeTab, setActiveTabState] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("tab") || "overview";
-    }
-    return "overview";
-  });
+  const routerState = useRouterState();
+  const navigate = useNavigate();
+
+  // Read activeTab directly from TanStack Router reactive search state
+  const currentSearch = (routerState.location.search || {}) as Record<string, string | undefined>;
+  const activeTab = currentSearch["tab"] || "overview";
 
   const setActiveTab = (tab: string) => {
-    setActiveTabState(tab);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", tab);
-      window.history.pushState({}, "", url.toString());
-    }
+    navigate({
+      to: "/student",
+      search: (prev: any) => ({
+        ...(prev || {}),
+        tab,
+      }),
+    });
   };
-
-  // Sync tab on popstate / history changes
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab) {
-        setActiveTabState(tab);
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
 
   const [profile, setProfile] = useState<StudentProfile>(() => {
     if (typeof window === "undefined") return DEFAULT_STUDENT_PROFILE;
@@ -179,7 +167,32 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Active UI modal states
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [activeQuiz, setActiveQuizState] = useState<Quiz | null>(null);
+
+  useEffect(() => {
+    const quizId = currentSearch?.["quizId"];
+    if (quizId && !activeQuiz) {
+      const target = STUDENT_QUIZZES.find((q) => q.id === quizId);
+      if (target) {
+        setActiveQuizState(target);
+      }
+    }
+  }, [currentSearch?.["quizId"]]);
+
+  const setActiveQuiz = (quiz: Quiz | null) => {
+    setActiveQuizState(quiz);
+    if (!quiz && currentSearch?.["quizId"]) {
+      navigate({
+        to: "/student",
+        search: (prev: any) => {
+          const next = { ...(prev || {}) };
+          delete next.quizId;
+          return next;
+        },
+      });
+    }
+  };
+
   const [activeExercise, setActiveExercise] = useState<RecommendedExerciseItem | null>(null);
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
   const [activeAssessmentModuleId, setActiveAssessmentModuleId] = useState<string | "all-comprehensive">("all-comprehensive");
@@ -191,6 +204,9 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(`${STORAGE_KEY}_profile`, JSON.stringify(profile));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("student-profile-updated"));
+      }
     } catch (e) {
       console.error(e);
     }
