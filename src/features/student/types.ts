@@ -92,7 +92,7 @@ export interface RecommendedExerciseItem {
   objectives: string[];
   steps: string[];
   completedCount: number;
-  lastCompletedAt?: string;
+  lastCompletedAt?: string | undefined;
 }
 
 export interface ConsultationBooking {

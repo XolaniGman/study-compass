@@ -3,9 +3,7 @@ import {
   Menu,
   Search,
   Bell,
-  Sparkles,
   HelpCircle,
-  GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
 

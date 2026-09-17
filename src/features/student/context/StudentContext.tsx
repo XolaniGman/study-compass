@@ -54,8 +54,6 @@ interface StudentContextType {
   setIsConsultationModalOpen: (open: boolean) => void;
   isReportModalOpen: boolean;
   setIsReportModalOpen: (open: boolean) => void;
-  isAiAssistantOpen: boolean;
-  setIsAiAssistantOpen: (open: boolean) => void;
   resetAllToDefault: () => void;
 }
 
@@ -113,12 +111,31 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
 
   const institutional = useInstitutional();
 
-  // Shared active exercises filtered by !archived
+  const [exerciseProgress, setExerciseProgress] = useState<
+    Record<string, { completedCount: number; lastCompletedAt?: string | undefined }>
+  >(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_exercise_progress`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Shared active exercises filtered by !archived, merged with student progress
   const sharedActiveExercises: RecommendedExerciseItem[] = React.useMemo(() => {
-    if (!institutional?.exercises) return DEFAULT_EXERCISES;
-    return institutional.exercises
-      .filter((e) => !e.archived)
-      .map((e) => ({
+    const baseList =
+      institutional?.exercises && institutional.exercises.length > 0
+        ? institutional.exercises.filter((e) => !e.archived)
+        : DEFAULT_EXERCISES;
+
+    return baseList.map((e) => {
+      const progress = exerciseProgress[e.id];
+      const completedCount = progress ? progress.completedCount : (e.completedCount || 0);
+      const lastCompletedAt = progress?.lastCompletedAt ?? e.lastCompletedAt ?? undefined;
+
+      return {
         id: e.id,
         title: e.title,
         domain: (e.domain as DomainId) || "reading",
@@ -130,10 +147,11 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
         description: e.description,
         objectives: e.objectives || [],
         steps: e.steps || ["Review instructions", "Complete interactive drill"],
-        completedCount: e.completedCount || 0,
-        lastCompletedAt: e.lastCompletedAt,
-      }));
-  }, [institutional?.exercises]);
+        completedCount,
+        lastCompletedAt,
+      };
+    });
+  }, [institutional?.exercises, exerciseProgress]);
 
   const [consultations, setConsultations] = useState<ConsultationBooking[]>(() => {
     if (typeof window === "undefined") return DEFAULT_BOOKED_CONSULTATIONS;
@@ -198,7 +216,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   const [activeAssessmentModuleId, setActiveAssessmentModuleId] = useState<string | "all-comprehensive">("all-comprehensive");
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
   // Sync to local storage
   useEffect(() => {
@@ -238,6 +255,14 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
+      localStorage.setItem(`${STORAGE_KEY}_exercise_progress`, JSON.stringify(exerciseProgress));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [exerciseProgress]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(`${STORAGE_KEY}_accessibility`, JSON.stringify(accessibility));
     } catch (e) {
       console.error(e);
@@ -273,18 +298,16 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   };
 
   const recordExerciseCompletion = (exerciseId: string) => {
-    setExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            completedCount: ex.completedCount + 1,
-            lastCompletedAt: new Date().toISOString(),
-          };
-        }
-        return ex;
-      })
-    );
+    setExerciseProgress((prev) => {
+      const current = prev[exerciseId] || { completedCount: 0 };
+      return {
+        ...prev,
+        [exerciseId]: {
+          completedCount: current.completedCount + 1,
+          lastCompletedAt: new Date().toISOString(),
+        },
+      };
+    });
     toast.success("Exercise milestone recorded! Great work on your study routine.");
   };
 
@@ -332,7 +355,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     setProfile(DEFAULT_STUDENT_PROFILE);
     setLatestSession(DEFAULT_BASELINE_SESSION);
     setSessionsHistory([DEFAULT_BASELINE_SESSION]);
-    setExercises(DEFAULT_EXERCISES);
+    setExerciseProgress({});
     setConsultations(DEFAULT_BOOKED_CONSULTATIONS);
     setAccessibility(DEFAULT_ACCESSIBILITY_SETTINGS);
     setQuizAttempts(DEFAULT_QUIZ_ATTEMPTS);
@@ -371,8 +394,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
         setIsConsultationModalOpen,
         isReportModalOpen,
         setIsReportModalOpen,
-        isAiAssistantOpen,
-        setIsAiAssistantOpen,
         resetAllToDefault,
       }}
     >

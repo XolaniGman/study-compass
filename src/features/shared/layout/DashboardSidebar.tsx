@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   GraduationCap,
-  Sparkles,
   LayoutDashboard,
   ClipboardList,
   FileBarChart2,
@@ -14,13 +13,11 @@ import {
   FolderKanban,
   Sliders,
   ExternalLink,
-  Bot,
   Trophy,
   Settings,
   Database,
 } from "lucide-react";
 import { RoleSwitcher } from "./RoleSwitcher";
-import { AiAssistantModal } from "../components/AiAssistantModal";
 import type { NavGroup, RoleType } from "./types";
 import { useSupport } from "../../support";
 import { useInstitutional } from "../context/InstitutionalContext";
@@ -35,7 +32,6 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const currentSearch = routerState.location.search as Record<string, string | undefined>;
   const activeTab = currentSearch["tab"] || "overview";
 
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const { students, flaggedStudents, pendingReferrals } = useSupport();
   const { totalUsers, activeModules, contentLibrary } = useInstitutional();
 
@@ -438,33 +434,8 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
           </nav>
         </div>
 
-        {/* Sidebar Footer: AI Assistant Widget & User Profile */}
+        {/* Sidebar Footer: User Profile */}
         <div className="mt-8 space-y-4 px-1">
-          {/* AI Assistant Card with interactive modal launch */}
-          <div
-            onClick={() => setIsAiModalOpen(true)}
-            className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card/50 to-primary/5 p-3.5 shadow-sm cursor-pointer hover:border-primary/40 hover:shadow-md transition-all group"
-          >
-            <div className="flex items-center gap-2 text-primary font-medium text-xs">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
-              <span>AI Screening Assistant</span>
-            </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground font-light leading-relaxed">
-              Screening indicators calibrated for DUT 2026 academic standards.
-            </p>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsAiModalOpen(true);
-              }}
-              className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium py-2 px-2.5 transition-all shadow-sm cursor-pointer"
-            >
-              <Bot className="h-3.5 w-3.5" />
-              <span>Consult AI Advisor</span>
-            </button>
-          </div>
-
           {/* User Profile Bar */}
           <Link
             to="/student"
@@ -499,13 +470,6 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
           </Link>
         </div>
       </aside>
-
-      {/* Interactive Global AI Assistant Modal */}
-      <AiAssistantModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        initialRole={currentRole}
-      />
     </>
   );
 }
