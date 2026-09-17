@@ -4,7 +4,6 @@ import {
   Sliders,
   Eye,
   Scale,
-  ArrowLeft,
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
@@ -13,21 +12,62 @@ import {
   HelpCircle,
   BarChart3,
   Activity,
+  ShieldCheck,
 } from "lucide-react";
 import { useInstitutional } from "../../../shared/context/InstitutionalContext";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
 import { Badge } from "../../../../components/ui/badge";
-import { Slider } from "../../../../components/ui/slider";
 import { toast } from "sonner";
-import type { ScreeningDomainKey } from "../../../shared/types";
+import type { ScreeningDomainKey, AssessmentPoolItem } from "../../../shared/types";
 
 interface AssessmentsManagementPageProps {
   initialSubtab?: string;
-  onNavigateToOverview: () => void;
+  onNavigateToOverview?: () => void;
   onSubtabChange?: (subtab: string) => void;
 }
+
+const DOMAIN_METADATA: Record<
+  ScreeningDomainKey,
+  { code: string; title: string; shortName: string; description: string; clinicalFocus: string }
+> = {
+  reading: {
+    code: "FR05",
+    title: "Reading & Lexical Processing",
+    shortName: "Reading & Dyslexia",
+    description: "Visual-lexical tracking, word decoding efficiency, and reading stamina.",
+    clinicalFocus: "Dyslexia / Phonological Screening",
+  },
+  grammar: {
+    code: "FR06",
+    title: "Grammar & Syntax Formulation",
+    shortName: "Grammar & Dysgraphia",
+    description: "Syntactic sequencing, inflectional morphology, and written sentence construction.",
+    clinicalFocus: "Dysgraphia / Written Expression",
+  },
+  mathematics: {
+    code: "FR07",
+    title: "Mathematics & Quantitative Reasoning",
+    shortName: "Math & Dyscalculia",
+    description: "Spatial numbers, arithmetic sequencing, and formula calculation.",
+    clinicalFocus: "Dyscalculia / Numerical Cognition",
+  },
+  memory: {
+    code: "FR08",
+    title: "Working Memory & Processing Endurance",
+    shortName: "Memory & Attention",
+    description: "Auditory retention, multi-step instruction holding, and cognitive load.",
+    clinicalFocus: "Executive Function / ADHD Indicators",
+  },
+  comprehension: {
+    code: "FR09",
+    title: "Text Comprehension & Macrostructure",
+    shortName: "Comprehension & Synthesis",
+    description: "Inference deduction, implicit meaning, and conceptual integration.",
+    clinicalFocus: "Cognitive Processing & Synthesis",
+  },
+};
 
 export function AssessmentsManagementPage({
   initialSubtab = "create-assessment",
@@ -35,7 +75,7 @@ export function AssessmentsManagementPage({
   onSubtabChange,
 }: AssessmentsManagementPageProps) {
   const {
-    assessmentPools,
+    assessmentPools = {} as Record<ScreeningDomainKey, AssessmentPoolItem>,
     addQuestionToPool,
     scoringConfig,
     updateThresholds,
@@ -80,129 +120,162 @@ export function AssessmentsManagementPage({
       id: "set-weightings",
       label: "Set Weightings",
       icon: <Scale className="h-4 w-4" />,
-      badge: "100% Total",
+      badge: "Formula",
     },
   ];
 
   // ================= State for Create Assessment =================
-  const [selectedDomain, setSelectedDomain] = useState<ScreeningDomainKey>("dyslexia");
-  const [questionText, setQuestionText] = useState("");
-  const [questionCode, setQuestionCode] = useState("");
-  const [reverseScored, setReverseScored] = useState(false);
-  const [subscale, setSubscale] = useState("Phonological Processing");
+  const [selectedDomain, setSelectedDomain] = useState<ScreeningDomainKey>("reading");
+  const [questionPrompt, setQuestionPrompt] = useState("");
+  const [questionContext, setQuestionContext] = useState("Academic Study");
+  const [questionType, setQuestionType] = useState<
+    "frequency-scale" | "impact-scale" | "accuracy-scale"
+  >("frequency-scale");
 
   const handleAddQuestionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questionText.trim()) {
-      toast.error("Please enter the screening prompt text.");
+    if (!questionPrompt.trim()) {
+      toast.error("Please enter the screening question prompt.");
       return;
     }
 
-    const code =
-      questionCode.trim() ||
-      `${selectedDomain.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-3)}`;
-
     addQuestionToPool(selectedDomain, {
-      code,
-      prompt: questionText.trim(),
-      type: "likert_5",
-      options: [
-        { label: "Never / Rarely", value: 1 },
-        { label: "Occasionally", value: 2 },
-        { label: "Sometimes", value: 3 },
-        { label: "Frequently", value: 4 },
-        { label: "Almost Always", value: 5 },
-      ],
-      reverseScored,
-      subscale: subscale.trim() || "General Indicator",
+      prompt: questionPrompt.trim(),
+      context: questionContext.trim() || "Academic Study",
+      type: questionType,
     });
 
-    toast.success(`New indicator ${code} added to ${selectedDomain} question bank!`);
-    setQuestionText("");
-    setQuestionCode("");
+    toast.success(
+      `New screening item added to ${DOMAIN_METADATA[selectedDomain].title} question bank!`
+    );
+    setQuestionPrompt("");
+    setQuestionContext("Academic Study");
+  };
+
+  // Safe question pool for the selected authoring domain
+  const authoringPool = assessmentPools?.[selectedDomain] || {
+    domain: selectedDomain,
+    code: DOMAIN_METADATA[selectedDomain]?.code || "FR05",
+    title: DOMAIN_METADATA[selectedDomain]?.title || "Screening Pool",
+    shortName: DOMAIN_METADATA[selectedDomain]?.shortName || "Domain",
+    description: "",
+    estimatedMinutes: 5,
+    questions: [],
   };
 
   // ================= State for Edit Indicators =================
-  const [thresholdsState, setThresholdsState] = useState(scoringConfig.thresholds);
+  const [highThreshold, setHighThreshold] = useState<number>(
+    scoringConfig?.thresholds?.high ?? 40
+  );
+  const [moderateThreshold, setModerateThreshold] = useState<number>(
+    scoringConfig?.thresholds?.moderate ?? 60
+  );
 
   const handleSaveThresholds = () => {
-    updateThresholds(thresholdsState);
+    updateThresholds({
+      high: highThreshold,
+      moderate: moderateThreshold,
+    });
     toast.success(
       "Screening indicator thresholds updated live! Student triage queue and classifications re-evaluated."
     );
   };
 
-  // ================= State for Weightings =================
-  const [weightingsState, setWeightingsState] = useState(scoringConfig.weightings);
-
-  const totalWeight =
-    weightingsState.dyslexia +
-    weightingsState.adhd +
-    weightingsState.dyscalculia +
-    weightingsState.dysgraphia +
-    weightingsState.processingSpeed;
-
-  const handleAutoNormalize = () => {
-    if (totalWeight === 0) return;
-    const factor = 100 / totalWeight;
-    setWeightingsState({
-      dyslexia: Math.round(weightingsState.dyslexia * factor),
-      adhd: Math.round(weightingsState.adhd * factor),
-      dyscalculia: Math.round(weightingsState.dyscalculia * factor),
-      dysgraphia: Math.round(weightingsState.dysgraphia * factor),
-      processingSpeed:
-        100 -
-        (Math.round(weightingsState.dyslexia * factor) +
-          Math.round(weightingsState.adhd * factor) +
-          Math.round(weightingsState.dyscalculia * factor) +
-          Math.round(weightingsState.dysgraphia * factor)),
-    });
-    toast.info("Domain weights normalized to exactly 100%.");
+  const handleResetThresholds = () => {
+    setHighThreshold(40);
+    setModerateThreshold(60);
+    updateThresholds({ high: 40, moderate: 60 });
+    toast.info("Thresholds reset to institutional defaults (High: 40%, Moderate: 60%).");
   };
 
+  // ================= State for Weightings =================
+  const [weights, setWeights] = useState<Record<ScreeningDomainKey, number>>({
+    reading: scoringConfig?.weightings?.reading ?? 1,
+    grammar: scoringConfig?.weightings?.grammar ?? 1,
+    mathematics: scoringConfig?.weightings?.mathematics ?? 1,
+    memory: scoringConfig?.weightings?.memory ?? 1,
+    comprehension: scoringConfig?.weightings?.comprehension ?? 1,
+  });
+
+  const totalRawWeight =
+    (weights.reading || 1) +
+    (weights.grammar || 1) +
+    (weights.mathematics || 1) +
+    (weights.memory || 1) +
+    (weights.comprehension || 1);
+
   const handleSaveWeightings = () => {
-    if (totalWeight !== 100) {
-      toast.error(`Weights must sum to exactly 100% (currently ${totalWeight}%).`);
-      return;
-    }
-    updateWeightings(weightingsState);
-    toast.success("Domain weightings formula committed! Composite index recalculation live.");
+    updateWeightings(weights);
+    toast.success("Domain weightings committed! Composite scoring algorithm recalculated.");
+  };
+
+  const handleEqualizeWeightings = () => {
+    const equalized: Record<ScreeningDomainKey, number> = {
+      reading: 1,
+      grammar: 1,
+      mathematics: 1,
+      memory: 1,
+      comprehension: 1,
+    };
+    setWeights(equalized);
+    updateWeightings(equalized);
+    toast.info("All domain weights equalized to balanced 1.0x factor.");
   };
 
   // ================= State for Preview Flow (Interactive QA) =================
-  const [previewDomain, setPreviewDomain] = useState<ScreeningDomainKey>("dyslexia");
+  const [previewDomain, setPreviewDomain] = useState<ScreeningDomainKey>("reading");
   const [previewAnswers, setPreviewAnswers] = useState<Record<string, number>>({});
-  const [previewCompleted, setPreviewCompleted] = useState(false);
 
-  const currentPool = assessmentPools[previewDomain] || assessmentPools.dyslexia;
+  // Safe current preview pool with fallback
+  const currentPool =
+    assessmentPools?.[previewDomain] ||
+    assessmentPools?.reading ||
+    (Object.values(assessmentPools || {})[0] as AssessmentPoolItem) || {
+      domain: previewDomain,
+      code: "FR05",
+      title: "Reading Screener",
+      shortName: "Reading",
+      description: "",
+      estimatedMinutes: 5,
+      questions: [],
+    };
+
+  const previewQuestions = currentPool?.questions ?? [];
 
   const handlePreviewAnswer = (qId: string, val: number) => {
     setPreviewAnswers((prev) => ({ ...prev, [qId]: val }));
   };
 
   const calculatePreviewScore = () => {
-    const questions = currentPool.questions;
-    if (questions.length === 0) return { raw: 0, percentage: 0, classification: "Low" };
-
-    let totalScore = 0;
-    let maxPossible = questions.length * 5;
-
-    questions.forEach((q) => {
-      const ans = previewAnswers[q.id] || 3;
-      totalScore += q.reverseScored ? 6 - ans : ans;
-    });
-
-    const pct = Math.round((totalScore / maxPossible) * 100);
-    const domainThreshold = thresholdsState[previewDomain];
-
-    let classification = "Low Risk";
-    if (pct >= domainThreshold.high) {
-      classification = "High Risk / Clinical Priority";
-    } else if (pct >= domainThreshold.moderate) {
-      classification = "Moderate Risk / Support Indicated";
+    if (!previewQuestions || previewQuestions.length === 0) {
+      return { raw: 0, percentage: 0, classification: "Low Risk / Typical", badgeColor: "emerald" };
     }
 
-    return { raw: totalScore, percentage: pct, classification };
+    let totalScore = 0;
+    const maxPossible = previewQuestions.length * 5;
+
+    previewQuestions.forEach((q) => {
+      const ans = previewAnswers[q.id] || 3;
+      totalScore += ans;
+    });
+
+    const percentage = Math.round((totalScore / maxPossible) * 100);
+
+    // High risk: score <= highThreshold (e.g. <= 40)
+    // Moderate risk: score <= moderateThreshold (e.g. <= 60)
+    // Low risk: score > moderateThreshold (e.g. > 60)
+    let classification = "Low Risk / Typical Profile";
+    let badgeColor = "emerald";
+
+    if (percentage <= highThreshold) {
+      classification = "High Priority / Clinical Indicator";
+      badgeColor = "destructive";
+    } else if (percentage <= moderateThreshold) {
+      classification = "Moderate Variation / Support Indicated";
+      badgeColor = "amber";
+    }
+
+    return { raw: totalScore, percentage, classification, badgeColor };
   };
 
   const previewResult = calculatePreviewScore();
@@ -245,7 +318,7 @@ export function AssessmentsManagementPage({
           <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
             <div className="border-b border-border/60 pb-4">
               <h2 className="font-serif text-2xl font-normal text-foreground">
-                Author Psychometric Screening Question
+                Author Psychometric Screening Item
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
                 Add validated self-report screening questions to the 5 diagnostic domain pools
@@ -257,7 +330,7 @@ export function AssessmentsManagementPage({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="domain" className="text-xs font-medium">
-                    Screening Domain (FR05–FR09)
+                    Screening Battery Domain (FR05–FR09)
                   </Label>
                   <select
                     id="domain"
@@ -267,24 +340,25 @@ export function AssessmentsManagementPage({
                     }
                     className="w-full h-10 px-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="dyslexia">FR05: Reading &amp; Phonological (Dyslexia)</option>
-                    <option value="adhd">FR06: Attention &amp; Executive Function (ADHD)</option>
-                    <option value="dyscalculia">FR07: Mathematical &amp; Numerical (Dyscalculia)</option>
-                    <option value="dysgraphia">FR08: Orthographic &amp; Motor Writing (Dysgraphia)</option>
-                    <option value="processingSpeed">FR09: Cognitive Processing Speed</option>
+                    {(Object.keys(DOMAIN_METADATA) as ScreeningDomainKey[]).map((dom) => (
+                      <option key={dom} value={dom}>
+                        {DOMAIN_METADATA[dom].code}: {DOMAIN_METADATA[dom].title} (
+                        {DOMAIN_METADATA[dom].clinicalFocus})
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="code" className="text-xs font-medium">
-                    Item Code (Optional)
+                  <Label htmlFor="context" className="text-xs font-medium">
+                    Diagnostic Context / Subscale Tag
                   </Label>
                   <Input
-                    id="code"
-                    placeholder="e.g. DYS-06 or NUM-05"
-                    value={questionCode}
-                    onChange={(e) => setQuestionCode(e.target.value)}
-                    className="rounded-xl h-10 text-xs font-mono"
+                    id="context"
+                    placeholder="e.g. Timed reading speed, Orthographic memory"
+                    value={questionContext}
+                    onChange={(e) => setQuestionContext(e.target.value)}
+                    className="rounded-xl h-10 text-xs"
                   />
                 </div>
               </div>
@@ -296,54 +370,44 @@ export function AssessmentsManagementPage({
                 <textarea
                   id="prompt"
                   rows={3}
-                  placeholder="e.g. Do you frequently need to re-read academic paragraphs multiple times to grasp their meaning?"
-                  value={questionText}
-                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder="e.g. When reading academic textbooks or lecture slides, do letters or words appear to blur, shift, or require re-reading multiple times?"
+                  value={questionPrompt}
+                  onChange={(e) => setQuestionPrompt(e.target.value)}
                   className="w-full p-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   required
                 />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="subscale" className="text-xs font-medium">
-                    Psychometric Sub-scale Tag
-                  </Label>
-                  <Input
-                    id="subscale"
-                    placeholder="e.g. Working Memory or Orthographic Decoding"
-                    value={subscale}
-                    onChange={(e) => setSubscale(e.target.value)}
-                    className="rounded-xl h-10 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Response Metric Format</Label>
-                  <div className="h-10 px-3 rounded-xl border border-border bg-muted/30 flex items-center text-xs text-muted-foreground">
-                    Standard 5-Point Likert Scale (1 = Never to 5 = Always)
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={reverseScored}
-                    onChange={(e) => setReverseScored(e.target.checked)}
-                    className="rounded border-input text-primary focus:ring-primary h-4 w-4"
-                  />
-                  <span>Reverse Scored Item (5 indicates high competence, 1 indicates severe difficulty)</span>
-                </label>
+              <div className="space-y-1.5">
+                <Label htmlFor="qtype" className="text-xs font-medium">
+                  Scale Format
+                </Label>
+                <select
+                  id="qtype"
+                  value={questionType}
+                  onChange={(e) =>
+                    setQuestionType(
+                      e.target.value as
+                        | "frequency-scale"
+                        | "impact-scale"
+                        | "accuracy-scale"
+                    )
+                  }
+                  className="w-full h-10 px-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="frequency-scale">Frequency Scale (Never to Almost Always)</option>
+                  <option value="impact-scale">Academic Impact Scale (No Impact to Severe Impact)</option>
+                  <option value="accuracy-scale">Accuracy Scale (Always Accurate to Frequently Inaccurate)</option>
+                </select>
               </div>
 
               <div className="pt-4 border-t border-border/60 flex items-center justify-between">
                 <div className="text-[11px] text-muted-foreground">
-                  Current pool size:{" "}
+                  Current bank size:{" "}
                   <strong className="font-mono text-foreground">
-                    {assessmentPools[selectedDomain]?.questions.length || 0} questions
-                  </strong>
+                    {authoringPool?.questions?.length || 0} items
+                  </strong>{" "}
+                  in {DOMAIN_METADATA[selectedDomain].shortName}
                 </div>
 
                 <Button
@@ -351,7 +415,7 @@ export function AssessmentsManagementPage({
                   className="rounded-xl text-xs bg-primary text-primary-foreground h-10 px-6 gap-2"
                 >
                   <PlusCircle className="h-4 w-4" />
-                  <span>Add to Screening Bank</span>
+                  <span>Add to Question Bank</span>
                 </Button>
               </div>
             </form>
@@ -361,29 +425,29 @@ export function AssessmentsManagementPage({
           <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <h3 className="font-serif text-lg font-normal text-foreground">
-                Domain Item Pool
+                Domain Item Bank
               </h3>
               <Badge variant="outline" className="font-mono text-xs capitalize">
-                {selectedDomain}
+                {DOMAIN_METADATA[selectedDomain].code}
               </Badge>
             </div>
 
             <p className="text-xs text-muted-foreground font-light">
-              Active questions administered to students during institutional screening batteries.
+              {DOMAIN_METADATA[selectedDomain].description}
             </p>
 
-            <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-              {assessmentPools[selectedDomain]?.questions.map((q, idx) => (
+            <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+              {(authoringPool?.questions || []).map((q, idx) => (
                 <div
-                  key={q.id}
+                  key={q.id || idx}
                   className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-1 text-xs"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] font-semibold text-primary">
-                      {q.code || `Q${idx + 1}`}
+                      Item #{idx + 1}
                     </span>
                     <span className="text-[10px] font-mono text-muted-foreground">
-                      {q.subscale}
+                      {q.context || "General Indicator"}
                     </span>
                   </div>
                   <p className="text-foreground leading-snug">{q.prompt}</p>
@@ -401,158 +465,158 @@ export function AssessmentsManagementPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
               <div>
                 <h2 className="font-serif text-2xl font-normal text-foreground">
-                  Psychometric Indicator Thresholds
+                  Psychometric Indicator Thresholds (FR11 / FR12)
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Adjust High Risk and Moderate Risk cutoff thresholds across the 5 domains.
-                  Modifications update the Support Staff screening triage queue in real time!
+                  Adjust High Priority and Moderate Difficulty cutoff thresholds. Modifications
+                  re-evaluate the Support Staff triage queue and Student screening results live!
                 </p>
               </div>
 
-              <Button
-                onClick={handleSaveThresholds}
-                className="rounded-xl text-xs bg-primary text-primary-foreground h-10 px-6 gap-2"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                <span>Save All Thresholds</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetThresholds}
+                  className="rounded-xl text-xs h-9 gap-1.5"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Reset Defaults</span>
+                </Button>
+
+                <Button
+                  onClick={handleSaveThresholds}
+                  className="rounded-xl text-xs bg-primary text-primary-foreground h-10 px-6 gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Save Indicator Thresholds</span>
+                </Button>
+              </div>
             </div>
 
-            {/* Threshold Sliders for each domain */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {(
-                [
-                  {
-                    key: "dyslexia",
-                    code: "FR05",
-                    title: "Reading & Phonological (Dyslexia)",
-                    desc: "Decoding speed, phonemic analysis, comprehension",
-                  },
-                  {
-                    key: "adhd",
-                    code: "FR06",
-                    title: "Attention & Executive Function (ADHD)",
-                    desc: "Focus maintenance, working memory, task inhibition",
-                  },
-                  {
-                    key: "dyscalculia",
-                    code: "FR07",
-                    title: "Mathematical & Numerical (Dyscalculia)",
-                    desc: "Symbolic quantity, arithmetic memory, sequencing",
-                  },
-                  {
-                    key: "dysgraphia",
-                    code: "FR08",
-                    title: "Orthographic & Fine Motor (Dysgraphia)",
-                    desc: "Spelling retrieval, handwriting speed, spatial spacing",
-                  },
-                  {
-                    key: "processingSpeed",
-                    code: "FR09",
-                    title: "Cognitive Processing Speed",
-                    desc: "Visual scanning, rapid lexical retrieval, mental pace",
-                  },
-                ] as const
-              ).map((d) => {
-                const t = thresholdsState[d.key];
-                return (
+            {/* Visual 3-Zone Cutoff Indicator */}
+            <div className="p-6 rounded-3xl bg-muted/20 border border-border space-y-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-foreground">Tri-Band Classification Zones</span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  High: &le;{highThreshold}% &bull; Moderate: &le;{moderateThreshold}% &bull; Typical: &gt;{moderateThreshold}%
+                </span>
+              </div>
+
+              {/* Progress bar visual */}
+              <div className="h-4 w-full rounded-full bg-muted overflow-hidden flex">
+                <div
+                  style={{ width: `${highThreshold}%` }}
+                  className="bg-destructive/80 h-full transition-all"
+                  title={`High Priority / Clinical Concern (0% to ${highThreshold}%)`}
+                />
+                <div
+                  style={{ width: `${Math.max(0, moderateThreshold - highThreshold)}%` }}
+                  className="bg-amber-500/80 h-full transition-all"
+                  title={`Moderate Variation / Support Indicated (${highThreshold + 1}% to ${moderateThreshold}%)`}
+                />
+                <div
+                  style={{ width: `${Math.max(0, 100 - moderateThreshold)}%` }}
+                  className="bg-emerald-500/70 h-full transition-all"
+                  title={`Typical Profile / Low Risk (${moderateThreshold + 1}% to 100%)`}
+                />
+              </div>
+
+              <div className="flex justify-between text-[11px] font-mono">
+                <span className="text-destructive font-semibold">
+                  &bull; High Priority (&le; {highThreshold}%)
+                </span>
+                <span className="text-amber-600 font-semibold">
+                  &bull; Moderate Variation ({highThreshold + 1}% - {moderateThreshold}%)
+                </span>
+                <span className="text-emerald-600 font-semibold">
+                  &bull; Typical / Low Risk (&gt; {moderateThreshold}%)
+                </span>
+              </div>
+            </div>
+
+            {/* Threshold Sliders */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="p-5 rounded-2xl bg-background border border-border space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <div>
+                    <span className="font-medium text-foreground block">
+                      High Priority Cutoff (FR11)
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      Scores at or below this trigger RED triage alerts
+                    </span>
+                  </div>
+                  <strong className="font-mono text-destructive text-lg">
+                    {highThreshold}%
+                  </strong>
+                </div>
+
+                <input
+                  type="range"
+                  min={20}
+                  max={50}
+                  value={highThreshold}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setHighThreshold(val);
+                    if (val >= moderateThreshold) {
+                      setModerateThreshold(val + 10);
+                    }
+                  }}
+                  className="w-full accent-destructive cursor-pointer"
+                />
+              </div>
+
+              <div className="p-5 rounded-2xl bg-background border border-border space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <div>
+                    <span className="font-medium text-foreground block">
+                      Moderate Variation Cutoff (FR12)
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      Scores at or below this trigger AMBER support flags
+                    </span>
+                  </div>
+                  <strong className="font-mono text-amber-600 text-lg">
+                    {moderateThreshold}%
+                  </strong>
+                </div>
+
+                <input
+                  type="range"
+                  min={51}
+                  max={80}
+                  value={moderateThreshold}
+                  onChange={(e) => setModerateThreshold(Number(e.target.value))}
+                  className="w-full accent-amber-600 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* 5 Domains Application Cards */}
+            <div className="space-y-3 pt-2">
+              <h4 className="font-serif text-lg font-medium text-foreground">
+                Domain Application Matrix (FR05–FR09)
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-5">
+                {(Object.keys(DOMAIN_METADATA) as ScreeningDomainKey[]).map((dom) => (
                   <div
-                    key={d.key}
-                    className="p-5 rounded-3xl border border-border bg-muted/20 space-y-4"
+                    key={dom}
+                    className="p-3.5 rounded-2xl bg-muted/30 border border-border space-y-1 text-xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-[11px] font-mono text-primary font-semibold">
-                          {d.code} Domain
-                        </div>
-                        <h4 className="font-serif text-lg font-medium text-foreground">
-                          {d.title}
-                        </h4>
-                        <p className="text-[11px] text-muted-foreground">{d.desc}</p>
-                      </div>
+                    <div className="font-mono font-semibold text-[11px] text-primary">
+                      {DOMAIN_METADATA[dom].code}
                     </div>
-
-                    {/* Visual 3-Zone Bar */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[11px] font-mono text-muted-foreground">
-                        <span>Low (&lt;{t.moderate}%)</span>
-                        <span className="text-amber-600 font-medium">
-                          Moderate ({t.moderate}% - {t.high - 1}%)
-                        </span>
-                        <span className="text-destructive font-semibold">
-                          High (&ge;{t.high}%)
-                        </span>
-                      </div>
-                      <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
-                        <div
-                          style={{ width: `${t.moderate}%` }}
-                          className="bg-emerald-500/60 h-full"
-                          title="Low Risk Zone"
-                        />
-                        <div
-                          style={{ width: `${t.high - t.moderate}%` }}
-                          className="bg-amber-500/70 h-full"
-                          title="Moderate Risk Zone"
-                        />
-                        <div
-                          style={{ width: `${100 - t.high}%` }}
-                          className="bg-destructive/80 h-full"
-                          title="High Risk Clinical Priority"
-                        />
-                      </div>
+                    <div className="font-medium text-foreground truncate">
+                      {DOMAIN_METADATA[dom].shortName}
                     </div>
-
-                    {/* Controls */}
-                    <div className="grid gap-3 sm:grid-cols-2 pt-2">
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Moderate Cutoff:</span>
-                          <strong className="font-mono text-amber-600">{t.moderate}%</strong>
-                        </div>
-                        <input
-                          type="range"
-                          min={30}
-                          max={65}
-                          value={t.moderate}
-                          onChange={(e) =>
-                            setThresholdsState({
-                              ...thresholdsState,
-                              [d.key]: {
-                                ...t,
-                                moderate: Number(e.target.value),
-                              },
-                            })
-                          }
-                          className="w-full accent-amber-600 cursor-pointer"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">High Risk Cutoff:</span>
-                          <strong className="font-mono text-destructive">{t.high}%</strong>
-                        </div>
-                        <input
-                          type="range"
-                          min={66}
-                          max={90}
-                          value={t.high}
-                          onChange={(e) =>
-                            setThresholdsState({
-                              ...thresholdsState,
-                              [d.key]: {
-                                ...t,
-                                high: Number(e.target.value),
-                              },
-                            })
-                          }
-                          className="w-full accent-destructive cursor-pointer"
-                        />
-                      </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Active: {assessmentPools?.[dom]?.questions?.length || 5} questions
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -568,8 +632,8 @@ export function AssessmentsManagementPage({
                   Student Screening Flow Simulator
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Simulate the student screening battery in real time to verify test experience,
-                  question pacing, and scoring accuracy.
+                  Simulate student screening batteries in real time to verify question pacing,
+                  scoring accuracy, and clinical triage flags.
                 </p>
               </div>
 
@@ -579,24 +643,20 @@ export function AssessmentsManagementPage({
                   onChange={(e) => {
                     setPreviewDomain(e.target.value as ScreeningDomainKey);
                     setPreviewAnswers({});
-                    setPreviewCompleted(false);
                   }}
                   className="h-9 px-3 rounded-xl border border-input bg-background text-xs text-foreground focus:outline-none font-medium"
                 >
-                  <option value="dyslexia">FR05 Dyslexia Battery</option>
-                  <option value="adhd">FR06 ADHD Battery</option>
-                  <option value="dyscalculia">FR07 Dyscalculia Battery</option>
-                  <option value="dysgraphia">FR08 Dysgraphia Battery</option>
-                  <option value="processingSpeed">FR09 Processing Speed</option>
+                  {(Object.keys(DOMAIN_METADATA) as ScreeningDomainKey[]).map((dom) => (
+                    <option key={dom} value={dom}>
+                      {DOMAIN_METADATA[dom].code} {DOMAIN_METADATA[dom].shortName}
+                    </option>
+                  ))}
                 </select>
 
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setPreviewAnswers({});
-                    setPreviewCompleted(false);
-                  }}
+                  onClick={() => setPreviewAnswers({})}
                   className="rounded-xl text-xs h-9 gap-1.5"
                 >
                   <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
@@ -606,54 +666,60 @@ export function AssessmentsManagementPage({
             </div>
 
             {/* Questions List Simulator */}
-            <div className="space-y-6">
-              {currentPool.questions.map((q, idx) => {
-                const currentVal = previewAnswers[q.id] || 3;
-                return (
-                  <div
-                    key={q.id}
-                    className="p-5 rounded-2xl bg-muted/20 border border-border/70 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-primary">
-                        Question {idx + 1} of {currentPool.questions.length}
-                      </span>
-                      <span className="text-[10px] font-mono text-muted-foreground">
-                        {q.code} &bull; {q.subscale}
-                      </span>
-                    </div>
+            <div className="space-y-4">
+              {previewQuestions.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground text-xs">
+                  No questions currently loaded for this domain.
+                </div>
+              ) : (
+                previewQuestions.map((q, idx) => {
+                  const currentVal = previewAnswers[q.id] || 3;
+                  return (
+                    <div
+                      key={q.id || idx}
+                      className="p-5 rounded-2xl bg-muted/20 border border-border/70 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-semibold text-primary">
+                          Question {idx + 1} of {previewQuestions.length}
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {q.context || "Assessment Item"}
+                        </span>
+                      </div>
 
-                    <h4 className="text-sm font-medium text-foreground leading-snug">
-                      {q.prompt}
-                    </h4>
+                      <h4 className="text-sm font-medium text-foreground leading-snug">
+                        {q.prompt}
+                      </h4>
 
-                    {/* Radio Likert Options */}
-                    <div className="grid grid-cols-5 gap-1.5 pt-1">
-                      {[
-                        { label: "Never", val: 1 },
-                        { label: "Rarely", val: 2 },
-                        { label: "Sometimes", val: 3 },
-                        { label: "Frequently", val: 4 },
-                        { label: "Always", val: 5 },
-                      ].map((opt) => (
-                        <button
-                          key={opt.val}
-                          type="button"
-                          onClick={() => handlePreviewAnswer(q.id, opt.val)}
-                          className={`p-2 rounded-xl text-center text-xs transition-all flex flex-col items-center gap-1 ${
-                            currentVal === opt.val
-                              ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                              : "bg-background border border-border hover:bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          <span className="font-mono text-xs">{opt.val}</span>
-                          <span className="text-[10px] hidden sm:inline">{opt.label}</span>
-                        </button>
-                      ))}
+                      {/* Radio Likert Options */}
+                      <div className="grid grid-cols-5 gap-1.5 pt-1">
+                        {[
+                          { label: "Rarely", val: 1 },
+                          { label: "Infrequent", val: 2 },
+                          { label: "Moderate", val: 3 },
+                          { label: "Frequent", val: 4 },
+                          { label: "Constant", val: 5 },
+                        ].map((opt) => (
+                          <button
+                            key={opt.val}
+                            type="button"
+                            onClick={() => handlePreviewAnswer(q.id, opt.val)}
+                            className={`p-2 rounded-xl text-center text-xs transition-all flex flex-col items-center gap-1 ${
+                              currentVal === opt.val
+                                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                                : "bg-background border border-border hover:bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            <span className="font-mono text-xs">{opt.val}</span>
+                            <span className="text-[10px] hidden sm:inline">{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -663,12 +729,12 @@ export function AssessmentsManagementPage({
               <div className="flex items-center gap-2 text-primary">
                 <BarChart3 className="h-5 w-5" />
                 <h3 className="font-serif text-lg font-normal text-foreground">
-                  Simulated Evaluation Result
+                  Simulated Classifier Output
                 </h3>
               </div>
 
               <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-3">
-                <div className="text-xs text-muted-foreground">Computed Score:</div>
+                <div className="text-xs text-muted-foreground">Domain Score:</div>
                 <div className="flex items-baseline gap-2">
                   <span className="font-serif text-3xl font-medium text-foreground">
                     {previewResult.percentage}%
@@ -679,12 +745,12 @@ export function AssessmentsManagementPage({
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-[11px] text-muted-foreground">Diagnostic Flag:</div>
+                  <div className="text-[11px] text-muted-foreground">Triage Classification:</div>
                   <div
                     className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium ${
-                      previewResult.percentage >= thresholdsState[previewDomain].high
+                      previewResult.badgeColor === "destructive"
                         ? "bg-destructive/10 text-destructive border border-destructive/20"
-                        : previewResult.percentage >= thresholdsState[previewDomain].moderate
+                        : previewResult.badgeColor === "amber"
                         ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
                         : "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                     }`}
@@ -694,14 +760,14 @@ export function AssessmentsManagementPage({
                 </div>
 
                 <div className="text-[11px] text-muted-foreground font-light pt-1 border-t border-border/60">
-                  Evaluated against active threshold: High &ge; {thresholdsState[previewDomain].high}%,
-                  Moderate &ge; {thresholdsState[previewDomain].moderate}%.
+                  Cutoffs in effect: High Priority &le; {highThreshold}%, Moderate &le;{" "}
+                  {moderateThreshold}%.
                 </div>
               </div>
 
               <div className="text-xs text-muted-foreground leading-relaxed font-light">
-                Use this preview to confirm that the question weightings and scoring scales provide
-                fair, clinically sound screening classifications before student deployment.
+                Use this preview simulator to confirm that scoring distributions provide fair,
+                clinically sound screening classifications before student deployment.
               </div>
             </div>
           </div>
@@ -715,11 +781,11 @@ export function AssessmentsManagementPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
               <div>
                 <h2 className="font-serif text-2xl font-normal text-foreground">
-                  Composite Screening Weighting Matrix
+                  Domain Composite Weighting Matrix
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Define the percentage weight each domain contributes to the overall institutional
-                  triage index. Weights must equal exactly 100%.
+                  Calibrate weighting multipliers across the 5 domains. Weights scale the relative
+                  importance of each domain in institutional composite indicators.
                 </p>
               </div>
 
@@ -727,11 +793,11 @@ export function AssessmentsManagementPage({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleAutoNormalize}
+                  onClick={handleEqualizeWeightings}
                   className="rounded-xl text-xs h-9 gap-1.5"
                 >
                   <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>Auto-Normalize (100%)</span>
+                  <span>Equalize (1.0x)</span>
                 </Button>
 
                 <Button
@@ -739,119 +805,54 @@ export function AssessmentsManagementPage({
                   className="rounded-xl text-xs bg-primary text-primary-foreground h-10 px-6 gap-2"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Save Matrix</span>
+                  <span>Save Multipliers</span>
                 </Button>
-              </div>
-            </div>
-
-            {/* Total Balance Bar */}
-            <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">Cumulative Distribution</span>
-                <span
-                  className={`font-mono font-semibold px-2 py-0.5 rounded-md ${
-                    totalWeight === 100
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : "bg-destructive/15 text-destructive"
-                  }`}
-                >
-                  Total: {totalWeight}% {totalWeight === 100 ? "✓ Balanced" : "⚠ Must Equal 100%"}
-                </span>
-              </div>
-
-              {/* Segmented Bar */}
-              <div className="h-3.5 w-full rounded-full bg-muted overflow-hidden flex">
-                <div
-                  style={{ width: `${weightingsState.dyslexia}%` }}
-                  className="bg-primary h-full transition-all"
-                  title={`Dyslexia: ${weightingsState.dyslexia}%`}
-                />
-                <div
-                  style={{ width: `${weightingsState.adhd}%` }}
-                  className="bg-chart-2 h-full transition-all"
-                  title={`ADHD: ${weightingsState.adhd}%`}
-                />
-                <div
-                  style={{ width: `${weightingsState.dyscalculia}%` }}
-                  className="bg-chart-3 h-full transition-all"
-                  title={`Dyscalculia: ${weightingsState.dyscalculia}%`}
-                />
-                <div
-                  style={{ width: `${weightingsState.dysgraphia}%` }}
-                  className="bg-chart-4 h-full transition-all"
-                  title={`Dysgraphia: ${weightingsState.dysgraphia}%`}
-                />
-                <div
-                  style={{ width: `${weightingsState.processingSpeed}%` }}
-                  className="bg-chart-5 h-full transition-all"
-                  title={`Processing Speed: ${weightingsState.processingSpeed}%`}
-                />
               </div>
             </div>
 
             {/* Weighting Sliders */}
             <div className="space-y-4">
-              {(
-                [
-                  {
-                    key: "dyslexia",
-                    code: "FR05",
-                    label: "Reading & Phonological (Dyslexia)",
-                    color: "text-primary",
-                  },
-                  {
-                    key: "adhd",
-                    code: "FR06",
-                    label: "Attention & Executive Function (ADHD)",
-                    color: "text-chart-2",
-                  },
-                  {
-                    key: "dyscalculia",
-                    code: "FR07",
-                    label: "Mathematical & Numerical (Dyscalculia)",
-                    color: "text-chart-3",
-                  },
-                  {
-                    key: "dysgraphia",
-                    code: "FR08",
-                    label: "Orthographic & Motor Writing (Dysgraphia)",
-                    color: "text-chart-4",
-                  },
-                  {
-                    key: "processingSpeed",
-                    code: "FR09",
-                    label: "Cognitive Processing Speed",
-                    color: "text-chart-5",
-                  },
-                ] as const
-              ).map((item) => (
+              {(Object.keys(DOMAIN_METADATA) as ScreeningDomainKey[]).map((dom) => (
                 <div
-                  key={item.key}
+                  key={dom}
                   className="p-4 rounded-2xl border border-border bg-background space-y-2"
                 >
                   <div className="flex items-center justify-between text-xs">
                     <div>
-                      <span className="font-mono text-muted-foreground mr-2">{item.code}</span>
-                      <span className="font-medium text-foreground">{item.label}</span>
+                      <span className="font-mono text-muted-foreground mr-2">
+                        {DOMAIN_METADATA[dom].code}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {DOMAIN_METADATA[dom].title}
+                      </span>
                     </div>
-                    <span className={`font-mono font-semibold text-sm ${item.color}`}>
-                      {weightingsState[item.key]}%
+                    <span className="font-mono font-semibold text-sm text-primary">
+                      {weights[dom] || 1}x Factor
                     </span>
                   </div>
 
                   <input
                     type="range"
-                    min={5}
-                    max={50}
-                    value={weightingsState[item.key]}
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={weights[dom] || 1}
                     onChange={(e) =>
-                      setWeightingsState({
-                        ...weightingsState,
-                        [item.key]: Number(e.target.value),
+                      setWeights({
+                        ...weights,
+                        [dom]: Number(e.target.value),
                       })
                     }
                     className="w-full accent-primary cursor-pointer"
                   />
+
+                  <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
+                    <span>1x (Standard)</span>
+                    <span>2x</span>
+                    <span>3x (Double)</span>
+                    <span>4x</span>
+                    <span>5x (Critical Focus)</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -862,21 +863,21 @@ export function AssessmentsManagementPage({
             <div className="flex items-center gap-2 text-primary">
               <Scale className="h-5 w-5" />
               <h3 className="font-serif text-lg font-normal text-foreground">
-                Weighting Rationale
+                Formula Mechanics
               </h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed font-light">
-              Composite weighting balances reading fluency, attention span, math difficulty,
-              writing velocity, and working memory into a single institutional indicator score.
+              Higher weighting factors increase the influence of specific cognitive domains when
+              evaluating institutional accommodations priority.
             </p>
             <div className="p-3.5 rounded-2xl bg-muted/40 border border-border space-y-2 text-xs">
-              <div className="font-medium text-foreground">Active Formula:</div>
+              <div className="font-medium text-foreground">Active Multipliers:</div>
               <div className="text-[11px] font-mono text-muted-foreground space-y-1">
-                <div>&bull; Dyslexia: {weightingsState.dyslexia}%</div>
-                <div>&bull; ADHD: {weightingsState.adhd}%</div>
-                <div>&bull; Dyscalculia: {weightingsState.dyscalculia}%</div>
-                <div>&bull; Dysgraphia: {weightingsState.dysgraphia}%</div>
-                <div>&bull; Processing: {weightingsState.processingSpeed}%</div>
+                <div>&bull; Reading (FR05): {weights.reading || 1}x</div>
+                <div>&bull; Grammar (FR06): {weights.grammar || 1}x</div>
+                <div>&bull; Mathematics (FR07): {weights.mathematics || 1}x</div>
+                <div>&bull; Memory (FR08): {weights.memory || 1}x</div>
+                <div>&bull; Comprehension (FR09): {weights.comprehension || 1}x</div>
               </div>
             </div>
           </div>
