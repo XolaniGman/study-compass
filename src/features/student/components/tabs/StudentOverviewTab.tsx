@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Sparkles,
   Play,
-  Pause,
   CheckCircle,
   ExternalLink,
   BookOpen,
@@ -18,13 +17,13 @@ import { Button } from "../../../../components/ui/button";
 import { Badge } from "../../../../components/ui/badge";
 import { Progress } from "../../../../components/ui/progress";
 
-const SLIDE_DURATION_MS = 6000;
+const SLIDE_DURATION_MS = 7000;
 
 const BANNER_SLIDES = [
-  { src: "/assets/cards/student_banner_bg.jpg", alt: "DUT Campus Library" },
-  { src: "/assets/hero_ref.jpg", alt: "Student studying in a campus library" },
-  { src: "/assets/showcase_ref.jpg", alt: "Student reviewing a learning assessment on a tablet" },
-  { src: "/assets/support_ref.jpg", alt: "Student meeting with a support advisor" },
+  "/assets/cards/student_banner_bg.jpg",
+  "/assets/hero_ref.jpg",
+  "/assets/showcase_ref.jpg",
+  "/assets/support_ref.jpg",
 ];
 
 interface StudentOverviewTabProps {
@@ -49,44 +48,40 @@ export function StudentOverviewTab({ onSelectTab }: StudentOverviewTabProps) {
   const totalCompletedExercises = exercises.reduce((acc, ex) => acc + ex.completedCount, 0);
 
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(true);
 
-  // Respect reduced-motion preferences (checked client-side; window is unavailable during SSR)
+  // Rotate the banner photos (skipped for reduced-motion users; window is unavailable during SSR)
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setIsSlideshowPlaying(false);
-    }
-  }, []);
-
-  // Advance the banner slideshow; each slide cross-fades into the next
-  useEffect(() => {
-    if (!isSlideshowPlaying) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % BANNER_SLIDES.length);
     }, SLIDE_DURATION_MS);
     return () => window.clearInterval(timer);
-  }, [isSlideshowPlaying]);
+  }, []);
 
   return (
     <div className="space-y-8">
-      {/* Top Banner Card with Animated Photo Slideshow */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 shadow-md min-h-[220px]">
-        {/* Background Slides: cross-fade with a slow Ken Burns zoom */}
-        {BANNER_SLIDES.map((slide, index) => (
-          <img
-            key={slide.src}
-            src={slide.src}
-            alt={slide.alt}
-            aria-hidden={index !== activeSlide}
-            className="banner-slide absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-[1500ms] ease-in-out"
+      {/* Top Banner Card */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-slate-950 shadow-md min-h-[220px]">
+        {/* Animated background: the photos cross-fade, and each drifts like the other banners */}
+        {BANNER_SLIDES.map((src, index) => (
+          <div
+            key={src}
+            className="admin-metric-bg absolute inset-0 pointer-events-none transition-opacity duration-[1500ms] ease-in-out"
             style={{
+              backgroundImage: `url("${src}")`,
+              backgroundSize: "140% auto",
+              animationDelay: `-${index * 7}s`,
               opacity: index === activeSlide ? 1 : 0,
-              animationPlayState: isSlideshowPlaying ? "running" : "paused",
             }}
+            aria-hidden="true"
           />
         ))}
-        {/* Rich cinematic gradient: dark on left for text legibility, clear on right to showcase the photos */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35 pointer-events-none" />
+        <div
+          className="admin-metric-sweep absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-emerald-200/10 to-transparent pointer-events-none"
+          aria-hidden="true"
+        />
+        {/* Dark on left for text legibility, clearer on right to show the image */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/30 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 sm:p-8">
           <div className="space-y-2 max-w-2xl">
@@ -97,16 +92,6 @@ export function StudentOverviewTab({ onSelectTab }: StudentOverviewTabProps) {
               <span className="text-xs text-slate-300 font-mono">
                 Last Evaluated: {new Date(latestSession.completedAt).toLocaleDateString()}
               </span>
-              {/* Slideshow toggle */}
-              <button
-                type="button"
-                onClick={() => setIsSlideshowPlaying((playing) => !playing)}
-                className="ml-auto lg:ml-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-300 hover:text-white bg-black/50 border border-white/20 backdrop-blur-md transition-colors"
-                title={isSlideshowPlaying ? "Pause slideshow" : "Play slideshow"}
-              >
-                {isSlideshowPlaying ? <Pause className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
-                <span>{isSlideshowPlaying ? "Slideshow: On" : "Slideshow: Paused"}</span>
-              </button>
             </div>
 
             <h2 className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-xs">

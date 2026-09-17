@@ -42,12 +42,19 @@ export function SupportDashboardTab({ onSelectTab }: SupportDashboardTabProps) {
   return (
     <div className="space-y-8">
       {/* Top Banner Card */}
-      <div className="relative group overflow-hidden rounded-3xl border border-primary/30 shadow-md min-h-[220px]">
-        {/* Background Image */}
-        <img
-          src="/assets/cards/staff_banner_bg.jpg"
-          alt="Graduating students"
-          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-slate-950 shadow-md min-h-[220px]">
+        {/* Animated graduation background (same drift + sweep as the other banners) */}
+        <div
+          className="admin-metric-bg absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'url("/assets/cards/staff_banner_bg.jpg")',
+            backgroundSize: "140% auto",
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="admin-metric-sweep absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-emerald-200/10 to-transparent pointer-events-none"
+          aria-hidden="true"
         />
         {/* Dark on left for text legibility, clearer on right to show the image */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35 pointer-events-none" />

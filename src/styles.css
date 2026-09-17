@@ -159,23 +159,45 @@
 }
 
 
-/* Student overview banner slideshow: slow Ken Burns zoom behind the cross-fade */
-@keyframes banner-ken-burns {
-  from {
+/* Admin metric cards: slow drifting pan across the shared tech background */
+@keyframes admin-metric-drift {
+  0% {
+    background-position: 0% 50%;
     transform: scale(1);
   }
-  to {
-    transform: scale(1.12);
+  50% {
+    background-position: 100% 40%;
+    transform: scale(1.08);
+  }
+  100% {
+    background-position: 0% 60%;
+    transform: scale(1);
   }
 }
 
-.banner-slide {
-  animation: banner-ken-burns 12s ease-in-out infinite alternate;
+@keyframes admin-metric-sweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
+
+.admin-metric-bg {
+  background-image: url("/assets/cards/admin_metrics_bg.jpg");
+  background-size: auto 160%;
+  background-repeat: no-repeat;
+  animation: admin-metric-drift 28s ease-in-out infinite;
+}
+
+.admin-metric-sweep {
+  animation: admin-metric-sweep 7s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .banner-slide {
+  .admin-metric-bg,
+  .admin-metric-sweep {
     animation: none;
-    transition: none;
   }
 }

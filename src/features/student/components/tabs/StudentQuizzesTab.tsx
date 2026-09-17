@@ -34,39 +34,52 @@ export function StudentQuizzesTab() {
   return (
     <div className="space-y-8">
       {/* Top Banner */}
-      <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-slate-950 shadow-md">
+        {/* Animated tech background (shared with the admin metric cards). Sized by width so the wide banner stays covered while it pans */}
+        <div
+          className="admin-metric-bg absolute inset-0 pointer-events-none"
+          style={{ backgroundSize: "140% auto" }}
+          aria-hidden="true"
+        />
+        <div
+          className="admin-metric-sweep absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent pointer-events-none"
+          aria-hidden="true"
+        />
+        {/* Dark on left for text legibility, clearer on right to show the image */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-slate-950/25 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 p-6 sm:p-8">
           <div className="space-y-2 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-0.5 rounded-full font-semibold">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-semibold backdrop-blur-sm">
                 Online Diagnostic Challenges
               </span>
-              <span className="text-xs text-muted-foreground font-mono">
+              <span className="text-xs text-slate-300 font-mono">
                 {quizzes.length} Quizzes Available
               </span>
             </div>
 
-            <h2 className="font-serif text-3xl font-light text-foreground">
+            <h2 className="font-serif text-3xl font-light text-white drop-shadow-xs">
               Online Quizzes &amp; Skill Challenges
             </h2>
 
-            <p className="text-xs text-muted-foreground font-light leading-relaxed">
+            <p className="text-xs text-slate-200 font-light leading-relaxed">
               Test your cognitive processing speed, Stroop attention control, reading decoding, and
               spatial math under interactive quiz conditions.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-card border border-border p-4 rounded-2xl shadow-sm">
-            <div className="h-12 w-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+          <div className="flex items-center gap-4 bg-black/55 border border-white/15 p-4 rounded-2xl shadow-sm backdrop-blur-md">
+            <div className="h-12 w-12 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
               <Trophy className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-300">
                 Average Quiz Score
               </span>
-              <p className="text-2xl font-bold font-mono text-foreground">
+              <p className="text-2xl font-bold font-mono text-white">
                 {averageScore}%{" "}
-                <span className="text-xs font-normal text-muted-foreground">
+                <span className="text-xs font-normal text-slate-300">
                   ({quizAttempts.length} Tests)
                 </span>
               </p>

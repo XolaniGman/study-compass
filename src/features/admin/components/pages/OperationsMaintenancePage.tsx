@@ -119,29 +119,38 @@ export function OperationsMaintenancePage({
       {activeSubtab === "system-health" && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-4">
-            <div className="p-5 rounded-3xl border border-border bg-card shadow-sm space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Rolling Uptime</div>
-              <div className="font-serif text-3xl font-medium text-emerald-600">99.98%</div>
-              <div className="text-[11px] text-muted-foreground">Past 30 Days SLA</div>
-            </div>
+            {[
+              { label: "Rolling Uptime", value: "99.98%", caption: "Past 30 Days SLA", valueClass: "text-emerald-300", delay: "0s" },
+              { label: "Database Latency", value: "14ms", caption: "Local SQLite / IndexedDB", valueClass: "text-white", delay: "-7s" },
+              { label: "Active Modules", value: activeModules, caption: "3 Core + 5 Batteries", valueClass: "text-white", delay: "-14s" },
+              { label: "POPIA S14 Status", value: "Active", caption: "AES-256 GCM Rest", valueClass: "text-emerald-300", delay: "-21s" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="relative overflow-hidden rounded-3xl border border-border/80 bg-slate-950 shadow-md hover:shadow-lg hover:border-primary/50 transition-all"
+              >
+                {/* Animated tech background (shared with the admin overview metric cards) */}
+                <div
+                  className="admin-metric-bg absolute inset-0 pointer-events-none"
+                  style={{ animationDelay: stat.delay }}
+                  aria-hidden="true"
+                />
+                <div
+                  className="admin-metric-sweep absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent pointer-events-none"
+                  style={{ animationDelay: stat.delay }}
+                  aria-hidden="true"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25 pointer-events-none" />
 
-            <div className="p-5 rounded-3xl border border-border bg-card shadow-sm space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Database Latency</div>
-              <div className="font-serif text-3xl font-medium text-foreground">14ms</div>
-              <div className="text-[11px] text-muted-foreground">Local SQLite / IndexedDB</div>
-            </div>
-
-            <div className="p-5 rounded-3xl border border-border bg-card shadow-sm space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Active Modules</div>
-              <div className="font-serif text-3xl font-medium text-foreground">{activeModules}</div>
-              <div className="text-[11px] text-muted-foreground">3 Core + 5 Batteries</div>
-            </div>
-
-            <div className="p-5 rounded-3xl border border-border bg-card shadow-sm space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">POPIA S14 Status</div>
-              <div className="font-serif text-3xl font-medium text-emerald-600">Active</div>
-              <div className="text-[11px] text-muted-foreground">AES-256 GCM Rest</div>
-            </div>
+                <div className="relative z-10 p-5 space-y-1">
+                  <div className="text-xs font-mono text-slate-300">{stat.label}</div>
+                  <div className={`font-serif text-3xl font-medium drop-shadow-sm ${stat.valueClass}`}>
+                    {stat.value}
+                  </div>
+                  <div className="text-[11px] text-slate-300">{stat.caption}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Subsystem Health Matrix */}

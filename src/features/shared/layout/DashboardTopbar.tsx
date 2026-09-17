@@ -4,6 +4,8 @@ import {
   Search,
   Bell,
   HelpCircle,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -72,6 +74,26 @@ export function DashboardTopbar({ onOpenMobileMenu }: DashboardTopbarProps) {
             className="px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
           >
             Admin
+          </Link>
+        </div>
+
+        {/* Auth links */}
+        <div className="flex items-center gap-1.5">
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card/60 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Sign in"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Login</span>
+          </Link>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 sm:px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Create an account"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Register</span>
           </Link>
         </div>
 

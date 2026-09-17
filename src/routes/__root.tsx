@@ -149,6 +149,18 @@ function LandingHeader() {
           <NavLink to="/student">Student</NavLink>
           <NavLink to="/support">Support Staff</NavLink>
           <NavLink to="/admin">Administrator</NavLink>
+          <Link
+            to="/login"
+            className="ml-1 sm:ml-2 rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs text-foreground hover:bg-muted transition-colors font-medium normal-case tracking-normal"
+          >
+            Sign In
+          </Link>
+          <Link
+            to="/register"
+            className="rounded-lg bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 transition-colors normal-case tracking-normal shadow-sm"
+          >
+            Register
+          </Link>
         </nav>
       </div>
     </header>
@@ -187,6 +199,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const routerState = useRouterState();
   const isLanding = routerState.location.pathname === "/";
+  const isAuthPage =
+    routerState.location.pathname === "/login" ||
+    routerState.location.pathname === "/register";
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -198,6 +213,10 @@ function RootComponent() {
           </main>
           <LandingFooter />
         </div>
+      ) : isAuthPage ? (
+        <main className="min-h-screen bg-background">
+          <Outlet />
+        </main>
       ) : (
         <InstitutionalProvider>
           <SupportProvider>

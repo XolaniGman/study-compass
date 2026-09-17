@@ -32,23 +32,36 @@ export function StudentAssessmentsTab() {
   return (
     <div className="space-y-8">
       {/* Top Banner: Comprehensive Assessment Battery */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-slate-950 shadow-md">
+        {/* Animated tech background (shared with the admin metric cards). Sized by width so the wide banner stays covered while it pans */}
+        <div
+          className="admin-metric-bg absolute inset-0 pointer-events-none"
+          style={{ backgroundSize: "140% auto" }}
+          aria-hidden="true"
+        />
+        <div
+          className="admin-metric-sweep absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent pointer-events-none"
+          aria-hidden="true"
+        />
+        {/* Dark on left for text legibility, clearer on right to show the image */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-slate-950/25 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 sm:p-8">
           <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-primary text-primary-foreground font-mono text-[10px] tracking-wider uppercase">
                 Recommended Full Assessment
               </Badge>
-              <span className="text-xs text-muted-foreground font-mono">
+              <span className="text-xs text-slate-300 font-mono">
                 Duration: ~15 mins &bull; 20 Questions
               </span>
             </div>
 
-            <h2 className="font-serif text-2xl sm:text-3xl font-light text-foreground">
+            <h2 className="font-serif text-2xl sm:text-3xl font-light text-white drop-shadow-xs">
               Comprehensive 4-Domain Screening Battery
             </h2>
 
-            <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-200 font-light leading-relaxed">
               Assesses all core neurodiversity domains in a single unified session: Reading &amp;
               Lexical Processing, Quantitative &amp; Spatial Math, Written Expression, and Sustained
               Executive Attention.
@@ -59,7 +72,7 @@ export function StudentAssessmentsTab() {
             <Button
               onClick={() => handleStart("all-comprehensive")}
               size="lg"
-              className="bg-primary text-primary-foreground gap-2 rounded-xl text-xs px-6 shadow-md shadow-primary/20"
+              className="bg-primary text-primary-foreground gap-2 rounded-xl text-xs px-6 shadow-md shadow-primary/30"
             >
               <ClipboardList className="h-4 w-4" />
               <span>Start Full Battery</span>
