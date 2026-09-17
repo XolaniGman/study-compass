@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   ClipboardList,
   FileBarChart2,
@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Sparkles,
   Play,
+  Pause,
   CheckCircle,
   ExternalLink,
   BookOpen,
@@ -16,6 +17,15 @@ import { useStudent } from "../../context/StudentContext";
 import { Button } from "../../../../components/ui/button";
 import { Badge } from "../../../../components/ui/badge";
 import { Progress } from "../../../../components/ui/progress";
+
+const SLIDE_DURATION_MS = 6000;
+
+const BANNER_SLIDES = [
+  { src: "/assets/cards/student_banner_bg.jpg", alt: "DUT Campus Library" },
+  { src: "/assets/hero_ref.jpg", alt: "Student studying in a campus library" },
+  { src: "/assets/showcase_ref.jpg", alt: "Student reviewing a learning assessment on a tablet" },
+  { src: "/assets/support_ref.jpg", alt: "Student meeting with a support advisor" },
+];
 
 interface StudentOverviewTabProps {
   onSelectTab: (tab: string) => void;
@@ -38,37 +48,83 @@ export function StudentOverviewTab({ onSelectTab }: StudentOverviewTabProps) {
   const activeConsultation = consultations.find((c) => c.status === "confirmed" || c.status === "scheduled");
   const totalCompletedExercises = exercises.reduce((acc, ex) => acc + ex.completedCount, 0);
 
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(true);
+
+  // Respect reduced-motion preferences (checked client-side; window is unavailable during SSR)
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setIsSlideshowPlaying(false);
+    }
+  }, []);
+
+  // Advance the banner slideshow; each slide cross-fades into the next
+  useEffect(() => {
+    if (!isSlideshowPlaying) return;
+    const timer = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % BANNER_SLIDES.length);
+    }, SLIDE_DURATION_MS);
+    return () => window.clearInterval(timer);
+  }, [isSlideshowPlaying]);
+
   return (
     <div className="space-y-8">
-      {/* Top Banner Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      {/* Top Banner Card with Animated Photo Slideshow */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 shadow-md min-h-[220px]">
+        {/* Background Slides: cross-fade with a slow Ken Burns zoom */}
+        {BANNER_SLIDES.map((slide, index) => (
+          <img
+            key={slide.src}
+            src={slide.src}
+            alt={slide.alt}
+            aria-hidden={index !== activeSlide}
+            className="banner-slide absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-[1500ms] ease-in-out"
+            style={{
+              opacity: index === activeSlide ? 1 : 0,
+              animationPlayState: isSlideshowPlaying ? "running" : "paused",
+            }}
+          />
+        ))}
+        {/* Rich cinematic gradient: dark on left for text legibility, clear on right to showcase the photos */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6 sm:p-8">
           <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-0.5 rounded-full backdrop-blur-sm shadow-xs">
                 Semester 2 &bull; Active Screening Profile
               </span>
-              <span className="text-xs text-muted-foreground font-mono">
+              <span className="text-xs text-slate-300 font-mono">
                 Last Evaluated: {new Date(latestSession.completedAt).toLocaleDateString()}
               </span>
+              {/* Slideshow toggle */}
+              <button
+                type="button"
+                onClick={() => setIsSlideshowPlaying((playing) => !playing)}
+                className="ml-auto lg:ml-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-300 hover:text-white bg-black/50 border border-white/20 backdrop-blur-md transition-colors"
+                title={isSlideshowPlaying ? "Pause slideshow" : "Play slideshow"}
+              >
+                {isSlideshowPlaying ? <Pause className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
+                <span>{isSlideshowPlaying ? "Slideshow: On" : "Slideshow: Paused"}</span>
+              </button>
             </div>
 
-            <h2 className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-foreground">
+            <h2 className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-xs">
               Welcome back, {profile.name.split(" ")[0]}
             </h2>
 
-            <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-200 font-light leading-relaxed">
               Your screening indicators have identified key study strengths in{" "}
-              <strong className="text-foreground font-medium">Attention &amp; Vigilance</strong> and
+              <strong className="text-white font-medium">Attention &amp; Vigilance</strong> and
               recommended accommodations for{" "}
-              <strong className="text-foreground font-medium">Reading &amp; Quantitative Fluency</strong>.
+              <strong className="text-white font-medium">Reading &amp; Quantitative Fluency</strong>.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={() => onSelectTab("quizzes")}
-              className="bg-primary text-primary-foreground text-xs gap-2 rounded-xl shadow-md shadow-primary/20"
+              className="bg-primary text-primary-foreground text-xs gap-2 rounded-xl shadow-md shadow-primary/30"
             >
               <Trophy className="h-4 w-4" />
               <span>Take Online Quizzes</span>
@@ -80,113 +136,152 @@ export function StudentOverviewTab({ onSelectTab }: StudentOverviewTabProps) {
                 setIsAssessmentModalOpen(true);
               }}
               variant="outline"
-              className="text-xs gap-2 rounded-xl"
+              className="text-xs gap-2 rounded-xl bg-slate-900/80 border-slate-700 text-white hover:bg-slate-800 backdrop-blur-sm"
             >
-              <ClipboardList className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4 text-emerald-400" />
               <span>Screening Battery</span>
             </Button>
 
             <Button
               onClick={() => setIsReportModalOpen(true)}
               variant="outline"
-              className="text-xs gap-2 rounded-xl"
+              className="text-xs gap-2 rounded-xl bg-slate-900/80 border-slate-700 text-white hover:bg-slate-800 backdrop-blur-sm"
             >
-              <FileBarChart2 className="h-4 w-4" />
+              <FileBarChart2 className="h-4 w-4 text-sky-400" />
               <span>Official Report</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* KPI Metrics Strip */}
+      {/* KPI Metrics Strip with Clear, Vivid Background Images */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Metric 1: Composite Index */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40">
-          <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-xl bg-chart-2/15 text-chart-2 flex items-center justify-center">
-              <FileBarChart2 className="h-5 w-5" />
+        <div className="relative group overflow-hidden rounded-2xl border border-border/80 shadow-md min-h-[170px]">
+          <img
+            src="/assets/cards/metric_screening_index.jpg"
+            alt="Cognitive Brain Index"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          {/* Bottom-up dark gradient scrim so image is clearly visible while text is crisp */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/30 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col justify-between h-full p-5">
+            <div className="flex items-center justify-between">
+              <div className="h-10 w-10 rounded-xl bg-black/60 text-sky-300 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xs">
+                <FileBarChart2 className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-mono font-semibold text-sky-300 bg-black/60 border border-sky-500/40 px-2.5 py-0.5 rounded-md backdrop-blur-md shadow-xs">
+                Evaluated
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-medium text-chart-2 bg-chart-2/10 px-2 py-0.5 rounded-md">
-              Evaluated
-            </span>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Screening Index
-            </h3>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">
-              {latestSession.overallIndex}%
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground font-light">
-              Composite across 4 domains
-            </p>
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider drop-shadow-xs">
+                Screening Index
+              </h3>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-white font-mono drop-shadow-sm">
+                {latestSession.overallIndex}%
+              </p>
+              <p className="mt-1 text-xs text-slate-300 font-light">
+                Composite across 4 domains
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Metric 2: Available Modules */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40">
-          <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <ClipboardList className="h-5 w-5" />
+        <div className="relative group overflow-hidden rounded-2xl border border-border/80 shadow-md min-h-[170px]">
+          <img
+            src="/assets/cards/metric_screening_batteries.jpg"
+            alt="Screening Batteries"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/30 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col justify-between h-full p-5">
+            <div className="flex items-center justify-between">
+              <div className="h-10 w-10 rounded-xl bg-black/60 text-emerald-300 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xs">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-mono font-semibold text-emerald-300 bg-black/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-md backdrop-blur-md shadow-xs">
+                4 Ready
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-medium text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-              4 Ready
-            </span>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Screening Batteries
-            </h3>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">4</p>
-            <p className="mt-1 text-xs text-muted-foreground font-light">
-              Adaptive domain modules
-            </p>
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider drop-shadow-xs">
+                Screening Batteries
+              </h3>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-white font-mono drop-shadow-sm">
+                4
+              </p>
+              <p className="mt-1 text-xs text-slate-300 font-light">
+                Adaptive domain modules
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Metric 3: Exercises Completed */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40">
-          <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-xl bg-chart-3/15 text-chart-3 flex items-center justify-center">
-              <Dumbbell className="h-5 w-5" />
+        <div className="relative group overflow-hidden rounded-2xl border border-border/80 shadow-md min-h-[170px]">
+          <img
+            src="/assets/cards/metric_practice_sessions.jpg"
+            alt="Practice Sessions Desk"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/30 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col justify-between h-full p-5">
+            <div className="flex items-center justify-between">
+              <div className="h-10 w-10 rounded-xl bg-black/60 text-amber-300 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xs">
+                <Dumbbell className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-mono font-semibold text-amber-300 bg-black/60 border border-amber-500/40 px-2.5 py-0.5 rounded-md backdrop-blur-md shadow-xs">
+                Streak Active
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-medium text-chart-3 bg-chart-3/10 px-2 py-0.5 rounded-md">
-              Streak Active
-            </span>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Practice Sessions
-            </h3>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">
-              {totalCompletedExercises}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground font-light">
-              Completed study routines
-            </p>
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider drop-shadow-xs">
+                Practice Sessions
+              </h3>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-white font-mono drop-shadow-sm">
+                {totalCompletedExercises}
+              </p>
+              <p className="mt-1 text-xs text-slate-300 font-light">
+                Completed study routines
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Metric 4: DUT Appointments */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40">
-          <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-xl bg-chart-1/15 text-chart-1 flex items-center justify-center">
-              <CalendarCheck className="h-5 w-5" />
+        <div className="relative group overflow-hidden rounded-2xl border border-border/80 shadow-md min-h-[170px]">
+          <img
+            src="/assets/cards/metric_support_bookings.jpg"
+            alt="DUT Support Consultation"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/30 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col justify-between h-full p-5">
+            <div className="flex items-center justify-between">
+              <div className="h-10 w-10 rounded-xl bg-black/60 text-emerald-300 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xs">
+                <CalendarCheck className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-mono font-semibold text-emerald-300 bg-black/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-md backdrop-blur-md shadow-xs">
+                DUT Unit
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-              DUT Unit
-            </span>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Support Bookings
-            </h3>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">
-              {consultations.filter((c) => c.status !== "cancelled").length}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground font-light">
-              Active intake consultations
-            </p>
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider drop-shadow-xs">
+                Support Bookings
+              </h3>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-white font-mono drop-shadow-sm">
+                {consultations.filter((c) => c.status !== "cancelled").length}
+              </p>
+              <p className="mt-1 text-xs text-slate-300 font-light">
+                Active intake consultations
+              </p>
+            </div>
           </div>
         </div>
       </div>

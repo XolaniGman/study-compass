@@ -158,3 +158,24 @@
   will-change: opacity, transform;
 }
 
+
+/* Student overview banner slideshow: slow Ken Burns zoom behind the cross-fade */
+@keyframes banner-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+.banner-slide {
+  animation: banner-ken-burns 12s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-slide {
+    animation: none;
+    transition: none;
+  }
+}

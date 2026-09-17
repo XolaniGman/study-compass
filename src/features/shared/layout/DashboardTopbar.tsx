@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
   Menu,
   Search,
@@ -12,37 +12,9 @@ interface DashboardTopbarProps {
 }
 
 export function DashboardTopbar({ onOpenMobileMenu }: DashboardTopbarProps) {
-  const routerState = useRouterState();
-  const currentPath = routerState.location.pathname;
-
-  const currentSearch = routerState.location.search as Record<string, string | undefined>;
-  const activeTab = currentSearch["tab"] || "overview";
-
-  const TAB_NAMES: Record<string, string> = {
-    overview: "Overview",
-    quizzes: "Online Quizzes",
-    assessments: "Screening Batteries",
-    results: "My Indicator Results",
-    exercises: "Study Tools & Exercises",
-    support: "DUT Support & Bookings",
-    settings: "Profile & Accessibility",
-  };
-
-  const roleTitle = currentPath.startsWith("/support")
-    ? "DUT Disability Unit"
-    : currentPath.startsWith("/admin")
-    ? "System Administrator"
-    : "Student Portal";
-
-  const currentSection = currentPath.startsWith("/student")
-    ? (TAB_NAMES[activeTab] || "Overview")
-    : currentPath.startsWith("/support")
-    ? "Staff Triage"
-    : "Operations";
-
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border/70 bg-background/80 px-4 sm:px-6 lg:px-8 backdrop-blur-md">
-      {/* Left: Mobile menu button + Breadcrumbs */}
+      {/* Left: Mobile menu button */}
       <div className="flex items-center gap-3 sm:gap-4">
         <button
           type="button"
@@ -52,19 +24,6 @@ export function DashboardTopbar({ onOpenMobileMenu }: DashboardTopbarProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-
-        <div className="flex items-center gap-2 text-xs">
-          <Link
-            to="/"
-            className="text-muted-foreground hover:text-primary transition-colors hidden sm:inline"
-          >
-            Study Compass
-          </Link>
-          <span className="text-muted-foreground/50 hidden sm:inline">/</span>
-          <span className="font-medium text-foreground">{roleTitle}</span>
-          <span className="text-muted-foreground/50">/</span>
-          <span className="text-primary font-medium">{currentSection}</span>
-        </div>
       </div>
 
       {/* Center: Search input */}

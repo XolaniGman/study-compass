@@ -102,23 +102,6 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
         },
       ],
     },
-    {
-      groupTitle: "DUT Support Services",
-      items: [
-        {
-          id: "support-portal",
-          label: "Disability Unit Portal",
-          to: "/support",
-          icon: <Users className="h-4 w-4" />,
-        },
-        {
-          id: "admin-portal",
-          label: "System Admin Panel",
-          to: "/admin",
-          icon: <ShieldCheck className="h-4 w-4" />,
-        },
-      ],
-    },
   ];
 
   const supportNavGroups: NavGroup[] = [

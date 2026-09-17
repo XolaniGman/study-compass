@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import type {
   TriageStudentRecord,
@@ -87,36 +88,23 @@ const INITIAL_RECENT_ACTIVITY: ActivityLogItem[] = [
 const SupportContext = createContext<SupportContextType | null>(null);
 
 export function SupportProvider({ children }: { children: React.ReactNode }) {
-  // Sync tab with URL search parameter (?tab=)
-  const [activeTab, setActiveTabState] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("tab") || "dashboard";
-    }
-    return "dashboard";
-  });
+  const routerState = useRouterState();
+  const navigate = useNavigate();
+
+  // Read activeTab directly from TanStack Router reactive search state, so sidebar
+  // <Link>s, header tabs and browser back/forward all stay in sync
+  const currentSearch = (routerState.location.search || {}) as Record<string, string | undefined>;
+  const activeTab = currentSearch["tab"] || "dashboard";
 
   const setActiveTab = (tab: string) => {
-    setActiveTabState(tab);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", tab);
-      window.history.pushState({}, "", url.toString());
-    }
+    navigate({
+      to: "/support",
+      search: (prev: any) => ({
+        ...(prev || {}),
+        tab,
+      }),
+    });
   };
-
-  // Sync tab on popstate / history changes
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab) {
-        setActiveTabState(tab);
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
 
   // Top-level live students state — single dataset for all views
   const [students, setStudents] = useState<TriageStudentRecord[]>(() => {
